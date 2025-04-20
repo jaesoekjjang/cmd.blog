@@ -1,5 +1,5 @@
 import { join } from "path";
-import { FileSystem } from "./vFileSystem";
+import { FileSystem, isDirectoryNode, isFileNode } from "./vFileSystem";
 
 export function isValidPath(
   fileSystem: FileSystem,
@@ -28,10 +28,12 @@ export const getAbsolutePath = (
   return join(root, currentDirectory);
 };
 
-export const isDirectory = <D extends string, F extends FileSystem>(
-  directory: D,
-  fileSystem: F,
-): boolean => {
-  const node = fileSystem.nodes[directory];
-  return node ? node.type === "directory" : false;
+export const isDirectory = (fileSystem: FileSystem, dir: string): boolean => {
+  const node = fileSystem.nodes[dir];
+  return node ? isDirectoryNode(node) : false;
+};
+
+export const isFile = (fileSystem: FileSystem, file: string): boolean => {
+  const node = fileSystem.nodes[file];
+  return node ? isFileNode(node) : false;
 };
