@@ -8,6 +8,8 @@ export type CommandType =
   | "cd"
   | "cat"
   | "clear"
+  | "pwd"
+  | "history"
   | "help"
   | (string & {});
 
@@ -57,6 +59,11 @@ export const commands: Command[] = [
     description: "Change directory",
     execute: (args, shell) => {
       const directory = resolve(args[args.length - 1] || "./");
+
+      if (!directory) {
+        return "디렉터리 경로를 입력하세요.";
+      }
+
       const currentDirectory = shell.getCurrentDirectory();
 
       switch (directory) {
@@ -83,9 +90,12 @@ export const commands: Command[] = [
 
           const path = getAbsolutePath(fileSystem, currentDirectory, directory);
 
+          console.log(directory, path);
+
           if (
-            !isValidPath(fileSystem, path) &&
-            !isValidPath(fileSystem, normalize(path))
+            !isValidPath(fileSystem, normalize(path)) ||
+            !isValidPath(fileSystem, path) ||
+            !isDirectory(fileSystem, path)
           ) {
             return `${directory}: 존재하지 않는 경로입니다.`;
           }
@@ -136,6 +146,19 @@ export const commands: Command[] = [
     description: "Clear the terminal screen",
     execute: (_, shell) => {
       shell.clearOutput();
+    },
+  },
+  {
+    name: "history",
+    description: "Display command history",
+    execute: (_, shell) => {
+      const history = shell.getCommandHistory();
+      if (history.length === 0) {
+        return "명령어 기록이 없습니다.";
+      }
+      return history
+        .map((command, index) => `${index + 1} ${command}`)
+        .join("\n");
     },
   },
   {

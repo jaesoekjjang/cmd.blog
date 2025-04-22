@@ -1,6 +1,6 @@
 import { Command } from "@/command/commands";
 import { FileSystem } from "@/vFileSystem";
-import { TerminalEmulator } from "./renderer/Terminal";
+import { TerminalEmulator, TextStyle } from "./renderer/Terminal";
 import { CommandHistoryManager } from "./command/CommandHistoryManager";
 import tinydate from "tinydate";
 
@@ -100,25 +100,40 @@ export class Shell {
    * command 관련 methods
    */
   executeCommand(commandStr: string): string | void {
-    this.terminal.addOutput(`${this.opts.promptPrefix} ${commandStr}`);
+    this.outputToTerminal(`${this.opts.promptPrefix} ${commandStr}`);
 
     const [cmd, ...args] = commandStr.split(" ");
 
     const command = this.commands.find((c) => c.name === cmd);
 
-    let output: string | void = undefined;
+    let output = "";
 
     if (!command) {
       output = "존재하지 않는 명령입니다.";
     } else {
-      output = command.execute(args, this);
+      output = command.execute(args, this) || "";
       this.commandHistoryManager.addCommand(commandStr);
     }
 
-    if (output) {
-      this.terminal.addOutput(output);
-    }
+    this.outputToTerminal(output, { newline: true });
 
     return output;
+  }
+
+  outputToTerminal(
+    output: string,
+    opts?: { newline?: boolean; style?: TextStyle },
+  ) {
+    const { newline = false, style } = opts || {};
+
+    this.terminal.addOutput(output, style);
+
+    if (newline) {
+      this.terminal.addOutput("\n");
+    }
+  }
+
+  getCommandHistory() {
+    return this.commandHistoryManager.getHistory();
   }
 }

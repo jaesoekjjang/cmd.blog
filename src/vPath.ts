@@ -19,13 +19,7 @@ export const getAbsolutePath = (
     return path;
   }
 
-  const absolutePath = join(root, currentDirectory, path);
-
-  if (isValidPath(fileSystem, absolutePath)) {
-    return absolutePath;
-  }
-
-  return join(root, currentDirectory);
+  return join(root, currentDirectory, path);
 };
 
 export const isDirectory = (fileSystem: FileSystem, dir: string): boolean => {
