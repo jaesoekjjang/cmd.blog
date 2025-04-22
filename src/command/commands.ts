@@ -69,7 +69,7 @@ export const commands: Command[] = [
         }
 
         case "-": {
-          const previousDirectory = shell.getHistory().slice(-1)[0];
+          const previousDirectory = shell.getFileHistory().slice(-1)[0];
 
           if (!previousDirectory) {
             return "이전 디렉터리가 없습니다.";
@@ -93,8 +93,6 @@ export const commands: Command[] = [
           shell.changeDirectory(path);
         }
       }
-
-      return "";
     },
   },
   {

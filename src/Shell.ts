@@ -1,89 +1,124 @@
 import { Command } from "@/command/commands";
 import { FileSystem } from "@/vFileSystem";
-import { Renderer } from "./renderer/Renderer";
+import { TerminalEmulator } from "./renderer/Terminal";
+import { CommandHistoryManager } from "./command/CommandHistoryManager";
+import tinydate from "tinydate";
+
+interface ShellOptions {
+  /**
+   * tinydate format
+   */
+  dateFormat: string;
+  promptPrefix: string;
+}
+
+const defaultShellOptions: ShellOptions = {
+  dateFormat: "🕔 {HH}:{mm}:{ss}",
+  promptPrefix: ">",
+};
 
 export class Shell {
-  private commands: Command[];
   private fileSystem: FileSystem;
-  private renderer: Renderer;
+  private terminal: TerminalEmulator;
   private currentDirectory: string;
-  private history: string[];
+  private fileHistory: string[];
+
+  private commands: Command[];
+  private commandHistoryManager: CommandHistoryManager;
+
+  private opts: ShellOptions;
 
   constructor({
     commands,
     fileSystem,
-    renderer,
+    terminal,
+    commandHistoryManager,
+    opts,
   }: {
     commands: Command[];
     fileSystem: FileSystem;
-    renderer: Renderer;
+    terminal: TerminalEmulator;
+    commandHistoryManager: CommandHistoryManager;
+    opts?: Partial<ShellOptions>;
   }) {
     this.commands = commands;
     this.fileSystem = fileSystem;
-    this.renderer = renderer;
+    this.terminal = terminal;
     this.currentDirectory = "/";
-    this.history = [];
+    this.fileHistory = [];
+    this.commandHistoryManager = commandHistoryManager;
 
-    this.renderer.renderPrompt({
+    this.opts = {
+      ...defaultShellOptions,
+      ...opts,
+    };
+
+    this.updateShellState();
+  }
+
+  private updateShellState() {
+    const date = tinydate(this.opts.dateFormat)(new Date());
+
+    this.terminal.setShellPromptState({
       directory: this.currentDirectory,
-      prompt: this.prompt(),
-      history: this.history,
+      prefix: this.opts.promptPrefix,
+      date,
     });
   }
 
-  private renderPrompt(): void {
-    this.renderer.renderPrompt({
-      directory: this.currentDirectory,
-      prompt: this.prompt(),
-      history: this.history,
-    });
+  /**
+   * fileSystem 관련methods
+   */
+  changeDirectory(dir: string) {
+    this.currentDirectory = dir;
+    this.updateShellState();
+    return dir;
   }
 
+  getFileSystem() {
+    return this.fileSystem;
+  }
+
+  getCurrentDirectory() {
+    return this.currentDirectory;
+  }
+
+  clearOutput() {
+    this.terminal.clear();
+    this.updateShellState();
+  }
+
+  getFileHistory() {
+    return [...this.fileHistory];
+  }
+
+  addToFileHistory(file: string) {
+    this.fileHistory.push(file);
+  }
+
+  /**
+   * command 관련 methods
+   */
   executeCommand(commandStr: string): string | void {
+    this.terminal.addOutput(`${this.opts.promptPrefix} ${commandStr}`);
+
     const [cmd, ...args] = commandStr.split(" ");
 
     const command = this.commands.find((c) => c.name === cmd);
 
+    let output: string | void = undefined;
+
     if (!command) {
-      const output = "존재하지 않는 명령입니다.";
-      this.renderer.renderOutput(output);
-      this.renderPrompt();
-      return output;
+      output = "존재하지 않는 명령입니다.";
+    } else {
+      output = command.execute(args, this);
+      this.commandHistoryManager.addCommand(commandStr);
     }
 
-    const output = command.execute(args, this);
-
     if (output) {
-      this.renderer.renderOutput(output);
-      this.renderPrompt();
+      this.terminal.addOutput(output);
     }
 
     return output;
-  }
-
-  changeDirectory(dir: string): string {
-    this.history.push(this.currentDirectory);
-    this.currentDirectory = dir;
-    return dir;
-  }
-
-  prompt(): string {
-    return "> ";
-  }
-
-  getFileSystem(): FileSystem {
-    return this.fileSystem;
-  }
-
-  getCurrentDirectory(): string {
-    return this.currentDirectory;
-  }
-
-  getHistory(): string[] {
-    return this.history;
-  }
-
-  clearOutput(): void {
-    this.renderer.clearOutput();
   }
 }
