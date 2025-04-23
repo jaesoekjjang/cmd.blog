@@ -1,8 +1,11 @@
 import { Command } from "@/command/commands";
 import { FileSystem } from "@/vFileSystem";
-import { TerminalEmulator, TextStyle } from "./renderer/Terminal";
+import { TerminalEmulator, TextStyle } from "./terminal/TerminalEmulator";
 import { CommandHistoryManager } from "./command/CommandHistoryManager";
 import tinydate from "tinydate";
+import { getThemeTokenResolver } from "./app/theme";
+
+const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
 
 interface ShellOptions {
   /**
@@ -100,22 +103,32 @@ export class Shell {
    * command 관련 methods
    */
   executeCommand(commandStr: string): string | void {
-    this.outputToTerminal(`${this.opts.promptPrefix} ${commandStr}`);
+    this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
+      style: { foreground: terminalPromptPrefix(), bold: true },
+      newline: false,
+    });
+
+    this.outputToTerminal(commandStr, {
+      style: { foreground: terminalPromptCommand(), bold: true },
+      newline: true,
+    });
 
     const [cmd, ...args] = commandStr.split(" ");
 
     const command = this.commands.find((c) => c.name === cmd);
 
-    let output = "";
+    let output: string | void;
 
     if (!command) {
       output = "존재하지 않는 명령입니다.";
     } else {
-      output = command.execute(args, this) || "";
+      output = command.execute(args, this);
       this.commandHistoryManager.addCommand(commandStr);
     }
 
-    this.outputToTerminal(output, { newline: true });
+    if (output) {
+      this.outputToTerminal(output, { newline: true });
+    }
 
     return output;
   }

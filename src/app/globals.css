@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* light theme */
+  --background-light: #ffffff;
+  --foreground-light: #171717;
+
+  --terminal-bg-light: theme("colors.slate.100");
+  --terminal-text-light: theme("colors.slate.800");
+  --terminal-border-light: theme("colors.slate.300");
+  --terminal-header-light: theme("colors.slate.200");
+  --terminal-button-light: theme("colors.slate.300");
+  --terminal-button-hover-light: theme("colors.slate.400");
+
+  /* dark theme */
+  --background-dark: #0a0a0a;
+  --foreground-dark: #ededed;
+
+  --terminal-bg-dark: theme("colors.gray.900");
+  --terminal-text-dark: theme("colors.stone.300");
+  --terminal-border-dark: theme("colors.gray.700");
+  --terminal-header-dark: theme("colors.gray.800");
+  --terminal-button-dark: theme("colors.gray.700");
+  --terminal-button-hover-dark: theme("colors.gray.600");
+
+  /* common theme */
+  --terminal-prompt-directory: theme("colors.cyan.500");
+  --terminal-prompt-prefix: theme("colors.lime.500");
+  --terminal-prompt-time: theme("colors.gray.500");
+  --terminal-output-command: var(--terminal-prompt-prefix);
+}
+
+@theme {
+  --background: var(--background-light);
+  --foreground: var(--foreground-light);
+
+  --color-terminal-bg: var(--terminal-bg-light);
+  --color-terminal-text: var(--terminal-text-light);
+  --color-terminal-border: var(--terminal-border-light);
+  --color-terminal-header: var(--terminal-header-light);
+  --color-terminal-button: var(--terminal-button-light);
+  --color-terminal-button-hover: var(--terminal-button-hover-light);
+
+  --color-terminal-prompt-directory: var(--terminal-prompt-directory);
+  --color-terminal-prompt-prefix: var(--terminal-prompt-prefix);
+  --color-terminal-prompt-time: var(--terminal-prompt-time);
+  --color-terminal-output-command: var(--terminal-output-command);
+
+  --color-terminal-scrollbar: var(--color-terminal-border);
+  --color-terminal-scrollbar-hover: var(--color-terminal-button-hover);
+}
+
+@layer theme {
+  .dark {
+    --background: var(--background-dark);
+    --foreground: var(--foreground-dark);
+
+    --color-terminal-bg: var(--terminal-bg-dark);
+    --color-terminal-text: var(--terminal-text-dark);
+    --color-terminal-border: var(--terminal-border-dark);
+    --color-terminal-header: var(--terminal-header-dark);
+    --color-terminal-button: var(--terminal-button-dark);
+    --color-terminal-button-hover: var(--terminal-button-hover-dark);
+
+    --color-terminal-scrollbar: var(--color-terminal-border);
+    --color-terminal-scrollbar-hover: var(--color-terminal-button-hover);
+  }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+
+  time {
+    margin: 0 0;
+  }
+}
+
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-terminal-scrollbar) transparent;
+  overflow-y: auto;
+}
+
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-terminal-scrollbar-hover);
 }

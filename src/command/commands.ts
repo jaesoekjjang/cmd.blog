@@ -51,7 +51,7 @@ export const commands: Command[] = [
           return `${node.name}${node.type === "directory" ? "/" : ""}`;
         })
         .filter(({ length }) => length > 0)
-        .join("\n");
+        .join("\t");
     },
   },
   {
@@ -89,8 +89,6 @@ export const commands: Command[] = [
           const fileSystem = shell.getFileSystem();
 
           const path = getAbsolutePath(fileSystem, currentDirectory, directory);
-
-          console.log(directory, path);
 
           if (
             !isValidPath(fileSystem, normalize(path)) ||

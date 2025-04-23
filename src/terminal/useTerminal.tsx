@@ -1,7 +1,9 @@
-import { useState, useRef } from "react";
-import { PromptState, TerminalEmulator, TextStyle } from "./Terminal";
+'use client';
 
-interface OutputItem {
+import { useState, useRef } from "react";
+import { PromptState, TerminalEmulator, TextStyle } from "./TerminalEmulator";
+
+export interface OutputItem {
   id: number;
   content: string;
   style?: TextStyle;
