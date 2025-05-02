@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shell } from "@/Shell";
-import { PromptState } from "@/terminal/TerminalEmulator";
+import { Shell } from "@/core/shell";
+import { PromptState } from "@/types/terminal";
 
 interface TerminalInputProps {
   prompt: PromptState;

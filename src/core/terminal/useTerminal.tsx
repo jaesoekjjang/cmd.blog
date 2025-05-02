@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import { useState, useRef } from "react";
-import { PromptState, TerminalEmulator, TextStyle } from "./TerminalEmulator";
+import { TerminalEmulator, TextStyle } from "./types";
+import { PromptState } from "@/core/shell";
 
 export interface OutputItem {
   id: number;

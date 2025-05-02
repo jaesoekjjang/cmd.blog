@@ -1,6 +1,10 @@
-import { Shell } from "@/Shell";
-import { isFileNode } from "@/vFileSystem";
-import { getAbsolutePath, isDirectory, isValidPath } from "@/vPath";
+import { Shell } from "@/core/shell";
+import {
+  getAbsolutePath,
+  isDirectory,
+  isFileNode,
+  isValidPath,
+} from "@/core/filesystem";
 import path, { normalize, resolve } from "path";
 
 export type CommandType =

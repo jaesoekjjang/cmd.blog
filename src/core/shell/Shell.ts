@@ -1,25 +1,17 @@
-import { Command } from "@/command/commands";
-import { FileSystem } from "@/vFileSystem";
-import { TerminalEmulator, TextStyle } from "./terminal/TerminalEmulator";
-import { CommandHistoryManager } from "./command/CommandHistoryManager";
+import { Command, CommandHistoryManager } from "@/core/commands";
+import { FileSystem } from "@/core/filesystem";
+import { getThemeTokenResolver } from "@/app/theme";
+import {  TextStyle } from "@/core/types/terminal";
+import { TerminalEmulator } from "@/core/terminal/TerminalEmulator";
+import { ShellOptions } from "./types";
 import tinydate from "tinydate";
-import { getThemeTokenResolver } from "./app/theme";
-
-const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
-
-interface ShellOptions {
-  /**
-   * tinydate format
-   */
-  dateFormat: string;
-  promptPrefix: string;
-}
 
 const defaultShellOptions: ShellOptions = {
   dateFormat: "🕔 {HH}:{mm}:{ss}",
   promptPrefix: ">",
 };
 
+const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
 export class Shell {
   private fileSystem: FileSystem;
   private terminal: TerminalEmulator;

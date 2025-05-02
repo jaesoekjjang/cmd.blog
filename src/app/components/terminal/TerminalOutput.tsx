@@ -1,7 +1,7 @@
 "use client";
 
-import { TextStyle } from "@/terminal/TerminalEmulator";
-import { OutputItem } from "@/terminal/useTerminal";
+import { OutputItem } from "@/core/terminal/useTerminal";
+import { TextStyle } from "@/types/terminal";
 
 interface OutputProps {
   output: OutputItem[];

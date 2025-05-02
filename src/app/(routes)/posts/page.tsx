@@ -1,5 +1,5 @@
-import { generateFileSystem } from "../actions/generateFileSystem";
-import { Terminal } from "./Terminal";
+import { generateFileSystem } from "@/app/actions/generateFileSystem";
+import { Terminal } from "@/app/components/terminal/Terminal";
 
 export default function TerminalPage() {
   const fileSystem = generateFileSystem();

@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TerminalHeader } from "./TerminalHeader";
 import { TerminalInput } from "./TerminalInput";
+import { useTerminal } from "@/core/terminal/useTerminal";
+import { commands, CommandHistoryManager } from "@/core/commands";
+import { Shell } from "@/core/shell";
+import { FileSystem } from "@/core/filesystem";
 import { TerminalOutput } from "./TerminalOutput";
-import { useTerminal } from "@/terminal/useTerminal";
-import { commands, CommandHistoryManager } from "@/command";
-import { Shell } from "@/Shell";
-import { FileSystem } from "@/vFileSystem";
 
 interface TerminalProps {
   fileSystem: FileSystem;

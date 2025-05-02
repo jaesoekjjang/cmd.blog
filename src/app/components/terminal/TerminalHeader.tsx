@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "../theme";
+import { useTheme } from "@/app/theme";
 
 export function TerminalHeader() {
   const [theme, toggleTheme] = useTheme();

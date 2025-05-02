@@ -1,4 +1,4 @@
 export { ThemeContext, ThemeProvider } from "./context";
-export { useTheme } from "./useTheme";
+export { useTheme } from "./hooks/useTheme";
 export { ThemeInitializationScript } from "./ThemeInitializationScript";
-export { getThemeTokenResolver } from "./getThemeTokenResolver";
+export { getThemeTokenResolver } from "./utils/getThemeTokenResolver";
