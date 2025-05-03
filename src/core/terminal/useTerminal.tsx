@@ -1,21 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { TerminalEmulator, TextStyle } from "./types";
+import { TerminalEmulator, TerminalOutputItem, TextStyle } from "./types";
 import { PromptState } from "@/core/shell";
 
-export interface OutputItem {
-  id: number;
-  content: string;
-  style?: TextStyle;
-}
 
 export function useTerminal(): {
   terminal: TerminalEmulator;
-  output: OutputItem[];
+  output: TerminalOutputItem[];
   prompt: PromptState;
 } {
-  const [outputItems, setOutputItems] = useState<OutputItem[]>([]);
+  const [outputItems, setOutputItems] = useState<TerminalOutputItem[]>([]);
 
   const [prompt, setPrompt] = useState<PromptState>({
     directory: "/",

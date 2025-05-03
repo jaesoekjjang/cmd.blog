@@ -12,8 +12,9 @@ export interface FSNode {
 
 export interface FileNode extends FSNode {
   type: "file";
-  content: string;
+  text: string;
   extension: string;
+  renderedContent?: string;
 }
 
 export interface DirectoryNode extends FSNode {

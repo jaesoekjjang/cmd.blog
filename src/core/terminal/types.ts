@@ -12,4 +12,11 @@ export interface TextStyle {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  isHtml?: boolean;
+}
+
+export interface TerminalOutputItem {
+  id: number;
+  content: string;
+  style?: TextStyle;
 }

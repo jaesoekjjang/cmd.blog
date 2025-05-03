@@ -3,6 +3,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  li {
+    margin-bottom: 0;
+  }
+
   /* light theme */
   --background-light: #ffffff;
   --foreground-light: #171717;

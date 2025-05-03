@@ -1,10 +1,11 @@
 import { join, basename, extname } from "path";
 import { readdirSync, readFileSync } from "fs";
-import { DirectoryNode, FileSystem } from "@/vFileSystem";
+import { renderMarkdown } from "@/core/renderer/renderMarkdown";
+import { DirectoryNode, FileSystem } from "@/core/filesystem";
 
 const rootDirectory = join(process.cwd(), "src/files");
 
-export function generateFileSystem(): FileSystem {
+export async function generateFileSystem(): Promise<FileSystem> {
   const fileSystem: FileSystem = {
     nodes: {},
     root: "/",
@@ -22,7 +23,7 @@ export function generateFileSystem(): FileSystem {
     parent: null,
   };
 
-  function walk(dir: string): void {
+  async function walk(dir: string) {
     try {
       const entries = readdirSync(dir, { withFileTypes: true });
       const relativeDirPath = dir.replace(rootDirectory, "") || "/";
@@ -43,17 +44,18 @@ export function generateFileSystem(): FileSystem {
             parent: relativeDirPath,
           };
 
-          walk(fullPath);
+          await walk(fullPath);
         } else {
           try {
             const fileContent = readFileSync(fullPath, "utf8");
             const extension = extname(entry.name);
+            const renderedContent = await renderMarkdown(fileContent);
 
             fileSystem.nodes[relativePath] = {
               type: "file",
               name: entry.name,
               path: relativePath,
-              content: fileContent,
+              content: renderedContent,
               extension: extension,
               parent: relativeDirPath,
             };
@@ -67,7 +69,7 @@ export function generateFileSystem(): FileSystem {
     }
   }
 
-  walk(rootDirectory);
+  await walk(rootDirectory);
 
   return fileSystem;
 }
