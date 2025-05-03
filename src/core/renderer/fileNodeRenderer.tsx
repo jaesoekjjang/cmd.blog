@@ -1,4 +1,6 @@
 import { marked } from "marked";
+import parse from "html-react-parser";
+import { FileNode } from "../filesystem";
 
 const renderer = new marked.Renderer();
 
@@ -48,6 +50,19 @@ renderer.image = ({ title, text, href }) => {
   return `<img src="${href}" alt="${text}" title="${titleText}" class="rounded-lg shadow-md border border-gray-200 dark:border-gray-700" />`;
 };
 
-export async function renderMarkdown(content: string) {
-  return await marked(content, { renderer });
+async function renderMarkdownToReact(content: string) {
+  const html = marked(content, { renderer });
+  return parse(await html);
+}
+
+const rendererRegistry: Record<string, (node: FileNode) => React.ReactNode> = {
+  ".md": (node) => renderMarkdownToReact(node.text),
+  default: (node) => <pre className="whitespace-pre-wrap">{node.text}</pre>,
+};
+
+export function renderFileNode(node: FileNode): React.ReactNode {
+  const renderer = (rendererRegistry[node.extension] ??
+    rendererRegistry["default"]) as (node: FileNode) => React.ReactNode;
+
+  return renderer(node);
 }

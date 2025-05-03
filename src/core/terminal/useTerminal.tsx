@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { TerminalEmulator, TerminalOutputItem, TextStyle } from "./types";
 import { PromptState } from "@/core/shell";
 
-
 export function useTerminal(): {
   terminal: TerminalEmulator;
   output: TerminalOutputItem[];
@@ -21,10 +20,18 @@ export function useTerminal(): {
   const idCounter = useRef(0);
 
   const terminal: TerminalEmulator = {
-    addOutput: (output: string, style?: TextStyle) => {
+    addOutput: ({
+      output,
+      style,
+      type = "text",
+    }: {
+      output: React.ReactNode;
+      style?: TextStyle;
+      type?: "text" | "react";
+    }) => {
       setOutputItems((prevItems) => [
         ...prevItems,
-        { id: idCounter.current++, content: output, style },
+        { id: idCounter.current++, content: output, style, type },
       ]);
     },
     clear: () => {

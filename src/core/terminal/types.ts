@@ -1,7 +1,11 @@
 import { PromptState } from "../shell";
 
 export interface TerminalEmulator {
-  addOutput: (output: string, style?: TextStyle) => void;
+  addOutput: (_: {
+    output: React.ReactNode;
+    style?: TextStyle;
+    type?: "text" | "react";
+  }) => void;
   clear: () => void;
   setShellPromptState: (prompt: PromptState) => void;
 }
@@ -12,11 +16,11 @@ export interface TextStyle {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
-  isHtml?: boolean;
 }
 
 export interface TerminalOutputItem {
   id: number;
-  content: string;
+  content: React.ReactNode;
   style?: TextStyle;
+  type?: "text" | "react";
 }

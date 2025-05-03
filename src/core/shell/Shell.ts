@@ -1,10 +1,11 @@
 import { Command, CommandHistoryManager } from "@/core/commands";
 import { FileSystem } from "@/core/filesystem";
 import { getThemeTokenResolver } from "@/app/theme";
-import {  TextStyle } from "@/core/types/terminal";
-import { TerminalEmulator } from "@/core/terminal/TerminalEmulator";
 import { ShellOptions } from "./types";
 import tinydate from "tinydate";
+import { TerminalEmulator, TextStyle } from "../terminal";
+import { CommandResult } from "../commands/commands";
+import { renderFileNode } from "../renderer/fileNodeRenderer";
 
 const defaultShellOptions: ShellOptions = {
   dateFormat: "🕔 {HH}:{mm}:{ss}",
@@ -12,6 +13,7 @@ const defaultShellOptions: ShellOptions = {
 };
 
 const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
+
 export class Shell {
   private fileSystem: FileSystem;
   private terminal: TerminalEmulator;
@@ -94,7 +96,7 @@ export class Shell {
   /**
    * command 관련 methods
    */
-  executeCommand(commandStr: string): string | void {
+  executeCommand(commandStr: string) {
     this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
       style: { foreground: terminalPromptPrefix(), bold: true },
       newline: false,
@@ -109,32 +111,48 @@ export class Shell {
 
     const command = this.commands.find((c) => c.name === cmd);
 
-    let output: string | void;
+    let output: CommandResult | void;
 
     if (!command) {
-      output = "존재하지 않는 명령입니다.";
+      output = {
+        type: "error",
+        message: `${cmd}: 존재하지 않는 명령입니다.`,
+      };
     } else {
       output = command.execute(args, this);
       this.commandHistoryManager.addCommand(commandStr);
     }
 
-    if (output) {
-      this.outputToTerminal(output, { newline: true });
+    switch (output?.type) {
+      case "text":
+        return this.outputToTerminal(output.content, {
+          newline: true,
+        });
+      case "file":
+        const renderedFile = renderFileNode(output.node);
+        return this.outputToTerminal(renderedFile, {
+          type: "react",
+          newline: true,
+        });
+      case "error":
+        return this.outputToTerminal(output.message, {
+          newline: true,
+        });
     }
-
-    return output;
   }
 
   outputToTerminal(
-    output: string,
-    opts?: { newline?: boolean; style?: TextStyle },
+    output: React.ReactNode,
+    opts?: { newline?: boolean; style?: TextStyle; type?: "text" | "react" },
   ) {
     const { newline = false, style } = opts || {};
 
-    this.terminal.addOutput(output, style);
+    this.terminal.addOutput({ output, style });
 
     if (newline) {
-      this.terminal.addOutput("\n");
+      this.terminal.addOutput({
+        output: "\n",
+      });
     }
   }
 
