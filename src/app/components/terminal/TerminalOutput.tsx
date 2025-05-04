@@ -1,6 +1,7 @@
 "use client";
 
 import { TextStyle, TerminalOutputItem } from "@/core/terminal";
+import { Prose } from "../prose/prose";
 
 interface OutputProps {
   output: TerminalOutputItem[];
@@ -8,10 +9,13 @@ interface OutputProps {
 
 export function TerminalOutput({ output }: OutputProps) {
   return (
-    <div className="text-sm space-y-2 whitespace-pre-wrap">
+    <div
+      className="whitespace-pre-line data-[output-exists=true]:mb-4"
+      data-output-exists={output.length > 0}
+    >
       {output.map((item) =>
         item.type === "react" ? (
-          <div key={item.id}>{item.content}</div>
+          <Prose key={item.id}>{item.content}</Prose>
         ) : (
           <StyledText key={item.id} style={item.style}>
             {item.content as string}

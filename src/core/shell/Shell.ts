@@ -145,13 +145,14 @@ export class Shell {
     output: React.ReactNode,
     opts?: { newline?: boolean; style?: TextStyle; type?: "text" | "react" },
   ) {
-    const { newline = false, style } = opts || {};
+    const { newline = false, style, type } = opts || {};
 
-    this.terminal.addOutput({ output, style });
+    this.terminal.addOutput({ output, style, type });
 
     if (newline) {
       this.terminal.addOutput({
         output: "\n",
+        type,
       });
     }
   }

@@ -12,7 +12,7 @@ export function TerminalHeader() {
         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
         <div className="w-3 h-3 rounded-full bg-green-500"></div>
       </div>
-      <div className="mx-auto text-sm font-medium text-terminal-text bg-terminal-header">
+      <div className="mx-auto font-medium text-terminal-text bg-terminal-header">
         Cmd.blog
       </div>
       <button

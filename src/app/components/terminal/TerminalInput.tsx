@@ -26,7 +26,7 @@ export function TerminalInput({ prompt, execute }: TerminalInputProps) {
   };
 
   return (
-    <form onSubmit={handleInput} className="mt-2">
+    <form onSubmit={handleInput}>
       <div className="flex items-center justify-between">
         <div className="text-terminal-prompt-directory font-semibold">
           {prompt.directory}

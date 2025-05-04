@@ -31,10 +31,10 @@ export function Terminal({ fileSystem }: TerminalProps) {
   }, [output]);
 
   return (
-    <div className="flex flex-col bg-terminal-bg border border-terminal-border rounded-lg overflow-hidden shadow-lg w-full text-sm max-w-5xl h-[720px]">
+    <div className="flex flex-col bg-terminal-bg border border-terminal-border rounded-lg overflow-hidden shadow-lg w-full max-w-5xl h-[720px]">
       <TerminalHeader />
       <div
-        className="flex flex-col flex-1 py-1 px-2 scrollbar"
+        className="py-1 px-2 scrollbar"
         ref={outputContainerRef}
       >
         <TerminalOutput output={output} />
