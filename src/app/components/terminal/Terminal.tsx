@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { TerminalHeader } from "./TerminalHeader";
 import { TerminalInput } from "./TerminalInput";
-import { useTerminal } from "@/core/terminal/useTerminal";
-import { commands, CommandHistoryManager } from "@/core/commands";
-import { Shell } from "@/core/shell";
+import { useLineEditor } from "@/core/lineEditor/useLineEditor";
+import { commands } from "@/core/commands";
 import { FileSystem } from "@/core/filesystem";
 import { TerminalOutput } from "./TerminalOutput";
 
@@ -14,12 +13,23 @@ interface TerminalProps {
 }
 
 export function Terminal({ fileSystem }: TerminalProps) {
-  const commandHistoryManager = useMemo(() => new CommandHistoryManager(), []);
-  const { terminal, output, prompt } = useTerminal();
+  const {
+    input,
+    outputs,
+    inputRef,
+    handleKeyDown,
+    handleTextInput,
+    handleSelect,
+    focus,
+    shell,
+  } = useLineEditor({
+    fileSystem,
+    commands,
+  });
 
-  const [shell] = useState(
-    () => new Shell({ commands, fileSystem, terminal, commandHistoryManager }),
-  );
+  useEffect(() => {
+    focus();
+  }, [focus]);
 
   const outputContainerRef = useRef<HTMLDivElement>(null);
 
@@ -28,19 +38,26 @@ export function Terminal({ fileSystem }: TerminalProps) {
       outputContainerRef.current.scrollTop =
         outputContainerRef.current.scrollHeight;
     }
-  }, [output]);
+  }, [outputs]);
 
   return (
     <div className="flex flex-col bg-terminal-bg border border-terminal-border rounded-lg overflow-hidden shadow-lg w-full max-w-5xl h-[720px]">
       <TerminalHeader />
-      <div
-        className="py-1 px-2 scrollbar"
-        ref={outputContainerRef}
-      >
-        <TerminalOutput output={output} />
+      <div className="py-1 px-2 scrollbar" ref={outputContainerRef}>
+        <TerminalOutput output={outputs} />
         <TerminalInput
-          prompt={prompt}
-          execute={(command) => shell.executeCommand(command)}
+          ref={inputRef}
+          value={input}
+          onChange={handleTextInput}
+          onKeyDown={handleKeyDown}
+          onSelect={handleSelect}
+          prompt={
+            shell?.promptState || {
+              directory: "",
+              prefix: "",
+              date: "",
+            }
+          }
         />
       </div>
     </div>

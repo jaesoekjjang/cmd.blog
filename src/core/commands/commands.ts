@@ -162,7 +162,7 @@ export const commands: Command[] = [
     name: "history",
     description: "Display command history",
     execute: (_, shell) => {
-      const history = shell.getCommandHistory();
+      const history = shell.getFullCommandHistory();
       if (history.length === 0) {
         return { type: "text", content: "명령어 기록이 없습니다." };
       }

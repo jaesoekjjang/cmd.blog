@@ -1,11 +1,13 @@
-import { Command, CommandHistoryManager } from "@/core/commands";
+import { Command } from "@/core/commands";
 import { FileSystem } from "@/core/filesystem";
 import { getThemeTokenResolver } from "@/app/theme";
-import { ShellOptions } from "./types";
+import { PromptState, ShellOptions } from "./types";
 import tinydate from "tinydate";
-import { TerminalEmulator, TextStyle } from "../terminal";
+import { TextStyle } from "../lineEditor";
 import { CommandResult } from "../commands/commands";
 import { renderFileNode } from "../renderer/fileNodeRenderer";
+import { LineEditor } from "../lineEditor/LineEditor";
+import { HistoryManager } from "../history";
 
 const defaultShellOptions: ShellOptions = {
   dateFormat: "🕔 {HH}:{mm}:{ss}",
@@ -16,31 +18,32 @@ const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
 
 export class Shell {
   private fileSystem: FileSystem;
-  private terminal: TerminalEmulator;
+  private lineEditor: LineEditor;
   private currentDirectory: string;
   private fileHistory: string[];
 
   private commands: Command[];
-  private commandHistoryManager: CommandHistoryManager;
+  private commandHistoryManager: HistoryManager;
 
   private opts: ShellOptions;
+  private promptState_: PromptState;
 
   constructor({
     commands,
     fileSystem,
-    terminal,
+    lineEditor,
     commandHistoryManager,
     opts,
   }: {
     commands: Command[];
     fileSystem: FileSystem;
-    terminal: TerminalEmulator;
-    commandHistoryManager: CommandHistoryManager;
+    lineEditor: LineEditor;
+    commandHistoryManager: HistoryManager;
     opts?: Partial<ShellOptions>;
   }) {
     this.commands = commands;
     this.fileSystem = fileSystem;
-    this.terminal = terminal;
+    this.lineEditor = lineEditor;
     this.currentDirectory = "/";
     this.fileHistory = [];
     this.commandHistoryManager = commandHistoryManager;
@@ -50,17 +53,27 @@ export class Shell {
       ...opts,
     };
 
+    this.promptState_ = {
+      directory: this.currentDirectory,
+      prefix: this.opts.promptPrefix,
+      date: tinydate(this.opts.dateFormat)(new Date()),
+    };
+
     this.updateShellState();
+  }
+
+  get promptState() {
+    return this.promptState_;
   }
 
   private updateShellState() {
     const date = tinydate(this.opts.dateFormat)(new Date());
 
-    this.terminal.setShellPromptState({
+    this.promptState_ = {
       directory: this.currentDirectory,
       prefix: this.opts.promptPrefix,
       date,
-    });
+    };
   }
 
   /**
@@ -81,7 +94,7 @@ export class Shell {
   }
 
   clearOutput() {
-    this.terminal.clear();
+    this.lineEditor.clear();
     this.updateShellState();
   }
 
@@ -120,8 +133,10 @@ export class Shell {
       };
     } else {
       output = command.execute(args, this);
-      this.commandHistoryManager.addCommand(commandStr);
     }
+
+          this.commandHistoryManager.push(commandStr);
+
 
     switch (output?.type) {
       case "text":
@@ -147,17 +162,39 @@ export class Shell {
   ) {
     const { newline = false, style, type } = opts || {};
 
-    this.terminal.addOutput({ output, style, type });
+    this.lineEditor.addOutput({ output, style, type });
 
     if (newline) {
-      this.terminal.addOutput({
+      this.lineEditor.addOutput({
         output: "\n",
         type,
       });
     }
   }
 
-  getCommandHistory() {
-    return this.commandHistoryManager.getHistory();
+  getFullCommandHistory() {
+    return this.commandHistoryManager.history;
+  }
+
+  getCurrentCommand() {
+    return this.commandHistoryManager.current();
+  }
+
+  getPreviousCommand() {
+    return this.commandHistoryManager.prev();
+  }
+
+  getNextCommand() {
+    return this.commandHistoryManager.next();
+  }
+
+  goToLastCommand() {
+    return this.commandHistoryManager.goToEnd();
+  }
+
+  getAutocompleteSuggestions(input: string): string[] {
+    return this.commands
+      .map((cmd) => cmd.name)
+      .filter((name) => name.startsWith(input));
   }
 }

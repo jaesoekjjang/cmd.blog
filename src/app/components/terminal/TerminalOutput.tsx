@@ -1,6 +1,6 @@
 "use client";
 
-import { TextStyle, TerminalOutputItem } from "@/core/terminal";
+import { TextStyle, TerminalOutputItem } from "@/core/lineEditor";
 import { Prose } from "../prose/prose";
 
 interface OutputProps {
@@ -15,10 +15,10 @@ export function TerminalOutput({ output }: OutputProps) {
     >
       {output.map((item) =>
         item.type === "react" ? (
-          <Prose key={item.id}>{item.content}</Prose>
+          <Prose key={item.id}>{item.output}</Prose>
         ) : (
           <StyledText key={item.id} style={item.style}>
-            {item.content as string}
+            {item.output as string}
           </StyledText>
         ),
       )}

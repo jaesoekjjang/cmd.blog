@@ -1,32 +1,25 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import { Shell } from "@/core/shell";
-import { PromptState } from "@/types/terminal";
+import { RefObject } from "react";
+import { PromptState } from "@/core/shell";
 
 interface TerminalInputProps {
+  ref: RefObject<HTMLInputElement | null>;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelect: (e: React.SyntheticEvent) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   prompt: PromptState;
-  execute: Shell["executeCommand"];
 }
 
-export function TerminalInput({ prompt, execute }: TerminalInputProps) {
-  const [input, setInput] = useState("");
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleInput = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const command = input.trim();
-    execute(command);
-    setInput("");
-  };
-
+export function TerminalInput({
+  ref,
+  value,
+  onChange,
+  onSelect,
+  onKeyDown,
+  prompt,
+}: TerminalInputProps) {
   return (
-    <form onSubmit={handleInput}>
+    <div>
       <div className="flex items-center justify-between">
         <div className="text-terminal-prompt-directory font-semibold">
           {prompt.directory}
@@ -43,14 +36,16 @@ export function TerminalInput({ prompt, execute }: TerminalInputProps) {
           {prompt.prefix}
         </span>
         <input
-          ref={inputRef}
+          ref={ref}
           className="flex-1 pl-1 bg-transparent border-none focus:outline-none dark:text-[var(--color-text-dark)] dark:caret-white light:text-[var(--color-text)] light:caret-[var(--color-text)]"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          value={value}
+          onChange={onChange}
+          onKeyDown={onKeyDown}
+          onSelect={onSelect}
           spellCheck="false"
           autoComplete="off"
         />
       </div>
-    </form>
+    </div>
   );
 }
