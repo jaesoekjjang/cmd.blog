@@ -183,16 +183,15 @@ export class InputLineEditor implements LineEditor {
   private handleArrowUp() {
     if (!this.shell) return;
 
-    const currentHistory = this.shell.getCurrentCommand();
-    this.shell.getPreviousCommand();
-    this.setInput(currentHistory || "");
+    const prevCommand = this.shell.getPreviousCommand();
+    this.setInput(prevCommand || "");
   }
 
   private handleArrowDown() {
     if (!this.shell) return;
 
-    const history = this.shell.getNextCommand();
-    this.setInput(history || "");
+    const nextCommand = this.shell.getNextCommand();
+    this.setInput(nextCommand || "");
   }
 
   private handleTab() {

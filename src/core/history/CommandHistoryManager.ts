@@ -18,6 +18,7 @@ export class CommandHistoryManager implements HistoryManager {
   saveHistory(): void {
     throw new Error("Method not implemented.");
   }
+
   loadHistory(): void {
     throw new Error("Method not implemented.");
   }
@@ -42,7 +43,7 @@ export class CommandHistoryManager implements HistoryManager {
 
   current() {
     if (this.history_.length === 0) return "";
-    if (this.historyIndex < 0) return this.history_[0];
+    if (this.historyIndex >= this.history_.length) return "";
     return this.history_[this.historyIndex];
   }
 
@@ -53,7 +54,7 @@ export class CommandHistoryManager implements HistoryManager {
       this.historyIndex--;
     }
 
-    return this.history_[this.historyIndex];
+    return this.current();
   }
 
   next() {
@@ -61,14 +62,11 @@ export class CommandHistoryManager implements HistoryManager {
       this.historyIndex++;
     }
 
-    if (this.historyIndex === this.history_.length) {
-      return ""; // 빈 입력 줄
-    }
-
-    return this.history_[this.historyIndex];
+    return this.current();
   }
 
   goToStart() {
+    if (this.history_.length === 0) return "";
     this.historyIndex = 0;
     return this.history_[this.historyIndex];
   }
@@ -78,8 +76,8 @@ export class CommandHistoryManager implements HistoryManager {
       this.historyIndex = 0;
       return "";
     }
-    this.historyIndex = this.history_.length - 1;
-    return this.history_[this.historyIndex];
+    this.historyIndex = this.history_.length;
+    return "";
   }
 
   subscribe(listener: (history: string[]) => void) {
