@@ -12,7 +12,7 @@ export interface TextStyle {
   underline?: boolean;
 }
 
-export interface TerminalOutputItem {
+export interface OutputItem {
   id: number;
   output: React.ReactNode;
   style?: TextStyle;

@@ -1,15 +1,10 @@
-import { PromptState, Shell } from "../shell";
+import { Shell } from "../shell";
 import { LineEditor } from "./LineEditor";
 import { OutputOptions } from "./types";
 
 export class InputLineEditor implements LineEditor {
   private shell: Shell | null = null;
   private input: string = "";
-  private promptState: PromptState = {
-    directory: "/",
-    prefix: ">",
-    date: "",
-  };
   private outputs: OutputOptions[] = [];
 
   private cursorSelectionStart_: number = 0;
@@ -68,10 +63,6 @@ export class InputLineEditor implements LineEditor {
     if (this.onOutputsChange) {
       this.onOutputsChange([...this.outputs]);
     }
-  }
-
-  setShellPromptState(state: PromptState) {
-    this.promptState = state;
   }
 
   focus() {

@@ -1,10 +1,10 @@
 "use client";
 
-import { TextStyle, TerminalOutputItem } from "@/core/lineEditor";
+import { TextStyle, OutputItem } from "@/core/lineEditor";
 import { Prose } from "../prose/prose";
 
 interface OutputProps {
-  output: TerminalOutputItem[];
+  output: OutputItem[];
 }
 
 export function TerminalOutput({ output }: OutputProps) {

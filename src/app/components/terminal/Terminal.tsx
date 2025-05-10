@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 import { TerminalHeader } from "./TerminalHeader";
 import { TerminalInput } from "./TerminalInput";
-import { useLineEditor } from "@/core/lineEditor/useLineEditor";
 import { commands } from "@/core/commands";
 import { FileSystem } from "@/core/filesystem";
 import { TerminalOutput } from "./TerminalOutput";
+import { useShell } from "@/core/shell/useShell";
 
 interface TerminalProps {
   fileSystem: FileSystem;
@@ -22,7 +22,7 @@ export function Terminal({ fileSystem }: TerminalProps) {
     handleSelect,
     focus,
     shell,
-  } = useLineEditor({
+  } = useShell({
     fileSystem,
     commands,
   });
@@ -51,13 +51,7 @@ export function Terminal({ fileSystem }: TerminalProps) {
           onChange={handleTextInput}
           onKeyDown={handleKeyDown}
           onSelect={handleSelect}
-          prompt={
-            shell?.promptState || {
-              directory: "",
-              prefix: "",
-              date: "",
-            }
-          }
+          prompt={shell.promptState}
         />
       </div>
     </div>

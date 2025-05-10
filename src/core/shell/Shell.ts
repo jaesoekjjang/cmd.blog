@@ -135,8 +135,7 @@ export class Shell {
       output = command.execute(args, this);
     }
 
-          this.commandHistoryManager.push(commandStr);
-
+    this.commandHistoryManager.push(commandStr);
 
     switch (output?.type) {
       case "text":

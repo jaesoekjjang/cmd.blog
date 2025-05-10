@@ -1,10 +1,8 @@
-import { PromptState } from "../shell";
 import { OutputOptions } from "./types";
 
 export interface LineEditor {
   addOutput: (options: OutputOptions) => void;
   clear: () => void;
-  setShellPromptState: (state: PromptState) => void;
   focus: () => void;
   getInput: () => string;
   setInput: (input: string) => void;

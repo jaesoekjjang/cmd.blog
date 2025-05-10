@@ -1,59 +1,51 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Shell } from "../shell";
-import { InputLineEditor } from "./InputLineEditor";
-import { Command } from "../commands";
-import { TerminalOutputItem } from "./types";
-import { FileSystem } from "../filesystem";
-import { CommandHistoryManager } from "../history";
+import { Shell } from "./Shell";
+import { Command } from "@/core/commands";
+import { FileSystem } from "@/core/filesystem";
+import { CommandHistoryManager } from "@/core/history";
+import { OutputItem } from "@/core/lineEditor";
+import { InputLineEditor } from "../lineEditor/InputLineEditor";
 
 interface useLineEditorProps {
   commands: Command[];
   fileSystem: FileSystem;
 }
 
-export function useLineEditor({ commands, fileSystem }: useLineEditorProps) {
+export function useShell({ commands, fileSystem }: useLineEditorProps) {
   const [input, setInput] = useState("");
-  const [outputs, setOutputs] = useState<TerminalOutputItem[]>([]);
+  const [outputs, setOutputs] = useState<OutputItem[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const outputIdRef = useRef(0);
 
-  const shellRef = useRef<Shell | null>(null);
+  const [lineEditor] = useState(
+    () =>
+      new InputLineEditor({
+        onInputChange: setInput,
+        onOutputsChange: (outputs) => {
+          const newOutputs = outputs.map((output) => ({
+            id: outputIdRef.current++,
+            ...output,
+          }));
+          setOutputs(newOutputs);
+        },
+        onFocus: () => inputRef.current?.focus(),
+      }),
+  );
 
-  const [lineEditor] = useState(() => {
-    return new InputLineEditor({
-      onInputChange: setInput,
-      onOutputsChange: (outputs) => {
-        const newOutputs = outputs.map((output) => ({
-          id: outputIdRef.current++,
-          ...output,
-        }));
-
-        setOutputs(newOutputs);
-      },
-      onFocus: () => inputRef.current?.focus(),
-    });
-  });
-
-  const initializeShell = useCallback(
-    (commands: Command[], fileSystem: FileSystem) => {
-      const commandHistoryManager = new CommandHistoryManager();
-
-      shellRef.current = new Shell({
+  const [shell] = useState(
+    () =>
+      new Shell({
         commands,
         fileSystem,
         lineEditor,
-        commandHistoryManager,
-      });
-
-      lineEditor.setShell(shellRef.current);
-    },
-    [lineEditor],
+        commandHistoryManager: new CommandHistoryManager(),
+      }),
   );
 
   useEffect(() => {
-    initializeShell(commands, fileSystem);
-  }, [commands, fileSystem, initializeShell]);
+    lineEditor.setShell(shell);
+  }, [lineEditor, shell]);
 
   // lineEditor->input 커서 위치 동기화
   const syncCursorPosition = useCallback(() => {
@@ -95,12 +87,10 @@ export function useLineEditor({ commands, fileSystem }: useLineEditorProps) {
   );
 
   return {
+    shell,
     input,
     outputs,
     inputRef,
-    shell: shellRef.current,
-    lineEditor,
-    initializeShell,
     handleKeyDown,
     handleTextInput,
     handleSelect,
