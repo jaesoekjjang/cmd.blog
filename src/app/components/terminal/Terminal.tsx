@@ -1,28 +1,19 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import { TerminalHeader } from "./TerminalHeader";
-import { TerminalInput } from "./TerminalInput";
-import { commands } from "@/core/commands";
-import { FileSystem } from "@/core/filesystem";
-import { TerminalOutput } from "./TerminalOutput";
-import { useShell } from "@/core/shell/useShell";
+import { useEffect, useRef } from 'react';
+import { TerminalHeader } from './TerminalHeader';
+import { TerminalInput } from './TerminalInput';
+import { commands } from '@/core/commands';
+import { FileSystem } from '@/core/filesystem';
+import { TerminalOutput } from './TerminalOutput';
+import { useShell } from '@/core/shell/useShell';
 
 interface TerminalProps {
   fileSystem: FileSystem;
 }
 
 export function Terminal({ fileSystem }: TerminalProps) {
-  const {
-    input,
-    outputs,
-    inputRef,
-    handleKeyDown,
-    handleTextInput,
-    handleSelect,
-    focus,
-    shell,
-  } = useShell({
+  const { input, outputs, inputRef, handleKeyDown, handleTextInput, handleSelect, focus, shell } = useShell({
     fileSystem,
     commands,
   });
@@ -35,8 +26,7 @@ export function Terminal({ fileSystem }: TerminalProps) {
 
   useEffect(() => {
     if (outputContainerRef.current) {
-      outputContainerRef.current.scrollTop =
-        outputContainerRef.current.scrollHeight;
+      outputContainerRef.current.scrollTop = outputContainerRef.current.scrollHeight;
     }
   }, [outputs]);
 

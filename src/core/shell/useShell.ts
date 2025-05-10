@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Shell } from "./Shell";
-import { Command } from "@/core/commands";
-import { FileSystem } from "@/core/filesystem";
-import { CommandHistoryManager } from "@/core/history";
-import { OutputItem } from "@/core/lineEditor";
-import { InputLineEditor } from "../lineEditor/InputLineEditor";
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Shell } from './Shell';
+import { Command } from '@/core/commands';
+import { FileSystem } from '@/core/filesystem';
+import { CommandHistoryManager } from '@/core/history';
+import { OutputItem } from '@/core/lineEditor';
+import { InputLineEditor } from '../lineEditor/InputLineEditor';
 
 interface useLineEditorProps {
   commands: Command[];
@@ -12,7 +12,7 @@ interface useLineEditorProps {
 }
 
 export function useShell({ commands, fileSystem }: useLineEditorProps) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,8 +22,8 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
     () =>
       new InputLineEditor({
         onInputChange: setInput,
-        onOutputsChange: (outputs) => {
-          const newOutputs = outputs.map((output) => ({
+        onOutputsChange: outputs => {
+          const newOutputs = outputs.map(output => ({
             id: outputIdRef.current++,
             ...output,
           }));
@@ -51,10 +51,7 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
   const syncCursorPosition = useCallback(() => {
     const inputEl = inputRef.current;
     if (inputEl && lineEditor) {
-      inputEl.setSelectionRange(
-        lineEditor.cursorSelectionStart,
-        lineEditor.cursorSelectionEnd,
-      );
+      inputEl.setSelectionRange(lineEditor.cursorSelectionStart, lineEditor.cursorSelectionEnd);
     }
   }, [lineEditor]);
 

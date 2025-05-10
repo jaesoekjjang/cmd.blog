@@ -1,21 +1,14 @@
-import { join } from "path";
-import { FileSystem, isDirectoryNode, isFileNode } from "./vFileSystem";
+import { join } from 'path';
+import { FileSystem, isDirectoryNode, isFileNode } from './vFileSystem';
 
-export function isValidPath(
-  fileSystem: FileSystem,
-  currentPath: string,
-): boolean {
+export function isValidPath(fileSystem: FileSystem, currentPath: string): boolean {
   return !!fileSystem.nodes[currentPath];
 }
 
-export const getAbsolutePath = (
-  fileSystem: FileSystem,
-  currentDirectory: string,
-  path: string,
-): string => {
+export const getAbsolutePath = (fileSystem: FileSystem, currentDirectory: string, path: string): string => {
   const root = fileSystem.root;
 
-  if (path.startsWith("/")) {
+  if (path.startsWith('/')) {
     return path;
   }
 

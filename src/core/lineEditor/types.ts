@@ -1,7 +1,7 @@
 export interface OutputOptions {
   output: React.ReactNode;
   style?: TextStyle;
-  type?: "text" | "react";
+  type?: 'text' | 'react';
 }
 
 export interface TextStyle {
@@ -16,5 +16,5 @@ export interface OutputItem {
   id: number;
   output: React.ReactNode;
   style?: TextStyle;
-  type?: "text" | "react";
+  type?: 'text' | 'react';
 }

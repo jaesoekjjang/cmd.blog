@@ -1,1 +1,1 @@
-export { commands, type CommandType, type Command } from "./commands";
+export { commands, type CommandType, type Command } from './commands';

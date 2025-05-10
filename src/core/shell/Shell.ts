@@ -1,17 +1,17 @@
-import { Command } from "@/core/commands";
-import { FileSystem } from "@/core/filesystem";
-import { getThemeTokenResolver } from "@/app/theme";
-import { PromptState, ShellOptions } from "./types";
-import tinydate from "tinydate";
-import { TextStyle } from "../lineEditor";
-import { CommandResult } from "../commands/commands";
-import { renderFileNode } from "../renderer/fileNodeRenderer";
-import { LineEditor } from "../lineEditor/LineEditor";
-import { HistoryManager } from "../history";
+import { Command } from '@/core/commands';
+import { FileSystem } from '@/core/filesystem';
+import { getThemeTokenResolver } from '@/app/theme';
+import { PromptState, ShellOptions } from './types';
+import tinydate from 'tinydate';
+import { TextStyle } from '../lineEditor';
+import { CommandResult } from '../commands/commands';
+import { renderFileNode } from '../renderer/fileNodeRenderer';
+import { LineEditor } from '../lineEditor/LineEditor';
+import { HistoryManager } from '../history';
 
 const defaultShellOptions: ShellOptions = {
-  dateFormat: "🕔 {HH}:{mm}:{ss}",
-  promptPrefix: ">",
+  dateFormat: '🕔 {HH}:{mm}:{ss}',
+  promptPrefix: '>',
 };
 
 const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
@@ -44,7 +44,7 @@ export class Shell {
     this.commands = commands;
     this.fileSystem = fileSystem;
     this.lineEditor = lineEditor;
-    this.currentDirectory = "/";
+    this.currentDirectory = '/';
     this.fileHistory = [];
     this.commandHistoryManager = commandHistoryManager;
 
@@ -120,15 +120,15 @@ export class Shell {
       newline: true,
     });
 
-    const [cmd, ...args] = commandStr.split(" ");
+    const [cmd, ...args] = commandStr.split(' ');
 
-    const command = this.commands.find((c) => c.name === cmd);
+    const command = this.commands.find(c => c.name === cmd);
 
     let output: CommandResult | void;
 
     if (!command) {
       output = {
-        type: "error",
+        type: 'error',
         message: `${cmd}: 존재하지 않는 명령입니다.`,
       };
     } else {
@@ -138,34 +138,31 @@ export class Shell {
     this.commandHistoryManager.push(commandStr);
 
     switch (output?.type) {
-      case "text":
+      case 'text':
         return this.outputToTerminal(output.content, {
           newline: true,
         });
-      case "file":
+      case 'file':
         const renderedFile = renderFileNode(output.node);
         return this.outputToTerminal(renderedFile, {
-          type: "react",
+          type: 'react',
           newline: true,
         });
-      case "error":
+      case 'error':
         return this.outputToTerminal(output.message, {
           newline: true,
         });
     }
   }
 
-  outputToTerminal(
-    output: React.ReactNode,
-    opts?: { newline?: boolean; style?: TextStyle; type?: "text" | "react" },
-  ) {
+  outputToTerminal(output: React.ReactNode, opts?: { newline?: boolean; style?: TextStyle; type?: 'text' | 'react' }) {
     const { newline = false, style, type } = opts || {};
 
     this.lineEditor.addOutput({ output, style, type });
 
     if (newline) {
       this.lineEditor.addOutput({
-        output: "\n",
+        output: '\n',
         type,
       });
     }
@@ -192,8 +189,6 @@ export class Shell {
   }
 
   getAutocompleteSuggestions(input: string): string[] {
-    return this.commands
-      .map((cmd) => cmd.name)
-      .filter((name) => name.startsWith(input));
+    return this.commands.map(cmd => cmd.name).filter(name => name.startsWith(input));
   }
 }

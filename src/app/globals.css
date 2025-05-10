@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -10,38 +10,34 @@
 
   /* light theme */
   --background-light: #faf9f8;
-  --foreground-light: theme("colors.stone.800");
+  --foreground-light: theme('colors.stone.800');
 
-  --terminal-bg-light: theme("colors.white");
-  --terminal-text-light: theme("colors.stone.800");
-  --terminal-border-light: theme("colors.stone.200");
-  --terminal-header-light: theme("colors.stone.50");
-  --terminal-button-light: color-mix(
-    in srgb,
-    theme("colors.stone.100") 80%,
-    theme("colors.stone.200") 30%
-  );
-  --terminal-button-hover-light: theme("colors.stone.200");
+  --terminal-bg-light: theme('colors.white');
+  --terminal-text-light: theme('colors.stone.800');
+  --terminal-border-light: theme('colors.stone.200');
+  --terminal-header-light: theme('colors.stone.50');
+  --terminal-button-light: color-mix(in srgb, theme('colors.stone.100') 80%, theme('colors.stone.200') 30%);
+  --terminal-button-hover-light: theme('colors.stone.200');
 
-  --terminal-prompt-directory-light: theme("colors.cyan.600");
-  --terminal-prompt-prefix-light: theme("colors.lime.600");
-  --terminal-prompt-time-light: theme("colors.stone.400");
+  --terminal-prompt-directory-light: theme('colors.cyan.600');
+  --terminal-prompt-prefix-light: theme('colors.lime.600');
+  --terminal-prompt-time-light: theme('colors.stone.400');
 
   /* dark theme */
   --background-dark: #020509;
-  --foreground-dark: theme("colors.neutral.200");
+  --foreground-dark: theme('colors.neutral.200');
 
-  --terminal-bg-dark: theme("colors.gray.900");
-  --terminal-text-dark: theme("colors.gray.200");
-  --terminal-border-dark: theme("colors.gray.700");
-  --terminal-header-dark: theme("colors.gray.800");
-  --terminal-button-dark: theme("colors.gray.700");
-  --terminal-button-hover-dark: theme("colors.gray.600");
+  --terminal-bg-dark: theme('colors.gray.900');
+  --terminal-text-dark: theme('colors.gray.200');
+  --terminal-border-dark: theme('colors.gray.700');
+  --terminal-header-dark: theme('colors.gray.800');
+  --terminal-button-dark: theme('colors.gray.700');
+  --terminal-button-hover-dark: theme('colors.gray.600');
 
   /* common theme */
-  --terminal-prompt-directory: theme("colors.cyan.600");
-  --terminal-prompt-prefix: theme("colors.lime.500");
-  --terminal-prompt-time: theme("colors.gray.500");
+  --terminal-prompt-directory: theme('colors.cyan.600');
+  --terminal-prompt-prefix: theme('colors.lime.500');
+  --terminal-prompt-time: theme('colors.gray.500');
   --terminal-output-command: var(--terminal-prompt-prefix);
 }
 

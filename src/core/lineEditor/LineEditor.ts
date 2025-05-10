@@ -1,4 +1,4 @@
-import { OutputOptions } from "./types";
+import { OutputOptions } from './types';
 
 export interface LineEditor {
   addOutput: (options: OutputOptions) => void;

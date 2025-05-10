@@ -1,4 +1,4 @@
-import { HistoryManager } from "./HistoryManager";
+import { HistoryManager } from './HistoryManager';
 
 export class CommandHistoryManager implements HistoryManager {
   private readonly maxHistorySize = 1000;
@@ -16,11 +16,11 @@ export class CommandHistoryManager implements HistoryManager {
   }
 
   saveHistory(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   loadHistory(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   clear() {
@@ -30,7 +30,7 @@ export class CommandHistoryManager implements HistoryManager {
   }
 
   push(entry: string) {
-    if (entry.trim() === "") return;
+    if (entry.trim() === '') return;
 
     if (this.history_.length >= this.maxHistorySize) {
       this.history_.shift();
@@ -42,13 +42,13 @@ export class CommandHistoryManager implements HistoryManager {
   }
 
   current() {
-    if (this.history_.length === 0) return "";
-    if (this.historyIndex >= this.history_.length) return "";
+    if (this.history_.length === 0) return '';
+    if (this.historyIndex >= this.history_.length) return '';
     return this.history_[this.historyIndex];
   }
 
   prev() {
-    if (this.history_.length === 0) return "";
+    if (this.history_.length === 0) return '';
 
     if (this.historyIndex > 0) {
       this.historyIndex--;
@@ -66,7 +66,7 @@ export class CommandHistoryManager implements HistoryManager {
   }
 
   goToStart() {
-    if (this.history_.length === 0) return "";
+    if (this.history_.length === 0) return '';
     this.historyIndex = 0;
     return this.history_[this.historyIndex];
   }
@@ -74,10 +74,10 @@ export class CommandHistoryManager implements HistoryManager {
   goToEnd() {
     if (this.history_.length === 0) {
       this.historyIndex = 0;
-      return "";
+      return '';
     }
     this.historyIndex = this.history_.length;
-    return "";
+    return '';
   }
 
   subscribe(listener: (history: string[]) => void) {
@@ -86,11 +86,11 @@ export class CommandHistoryManager implements HistoryManager {
   }
 
   removeListener(listener: (history: string[]) => void) {
-    this.listeners = this.listeners.filter((l) => l !== listener);
+    this.listeners = this.listeners.filter(l => l !== listener);
   }
 
   private notifyListeners() {
     const historyCopy = [...this.history_];
-    this.listeners.forEach((listener) => listener(historyCopy));
+    this.listeners.forEach(listener => listener(historyCopy));
   }
 }

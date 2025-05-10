@@ -1,10 +1,10 @@
-import { Shell } from "../shell";
-import { LineEditor } from "./LineEditor";
-import { OutputOptions } from "./types";
+import { Shell } from '../shell';
+import { LineEditor } from './LineEditor';
+import { OutputOptions } from './types';
 
 export class InputLineEditor implements LineEditor {
   private shell: Shell | null = null;
-  private input: string = "";
+  private input: string = '';
   private outputs: OutputOptions[] = [];
 
   private cursorSelectionStart_: number = 0;
@@ -23,12 +23,12 @@ export class InputLineEditor implements LineEditor {
     Tab: this.handleTab.bind(this),
     Home: this.moveCursorToStart.bind(this),
     End: this.moveCursorToEnd.bind(this),
-    "<C-c>": this.handleCtrlC.bind(this),
-    "<C-l>": this.handleCtrlL.bind(this),
-    "<C-u>": this.handleCtrlU.bind(this),
-    "<C-e>": this.moveCursorToEnd.bind(this),
-    "<C-a>": this.moveCursorToStart.bind(this),
-    "<C-w>": this.handleCtrlW.bind(this),
+    '<C-c>': this.handleCtrlC.bind(this),
+    '<C-l>': this.handleCtrlL.bind(this),
+    '<C-u>': this.handleCtrlU.bind(this),
+    '<C-e>': this.moveCursorToEnd.bind(this),
+    '<C-a>': this.moveCursorToStart.bind(this),
+    '<C-w>': this.handleCtrlW.bind(this),
   };
 
   constructor(callbacks?: {
@@ -89,16 +89,13 @@ export class InputLineEditor implements LineEditor {
   }
 
   createInputLine() {
-    this.setInput("");
+    this.setInput('');
     this.setSelection(0, 0);
     this.shell?.goToLastCommand();
   }
 
   setSelection(start: number, end: number) {
-    this.cursorSelectionStart_ = Math.max(
-      0,
-      Math.min(start, this.input.length),
-    );
+    this.cursorSelectionStart_ = Math.max(0, Math.min(start, this.input.length));
     this.cursorSelectionEnd_ = Math.max(0, Math.min(end, this.input.length));
 
     return {
@@ -165,7 +162,7 @@ export class InputLineEditor implements LineEditor {
     if (trimmedInput) {
       this.shell.executeCommand(trimmedInput);
     } else {
-      this.shell.outputToTerminal("", { newline: true });
+      this.shell.outputToTerminal('', { newline: true });
     }
 
     this.createInputLine();
@@ -175,14 +172,14 @@ export class InputLineEditor implements LineEditor {
     if (!this.shell) return;
 
     const prevCommand = this.shell.getPreviousCommand();
-    this.setInput(prevCommand || "");
+    this.setInput(prevCommand || '');
   }
 
   private handleArrowDown() {
     if (!this.shell) return;
 
     const nextCommand = this.shell.getNextCommand();
-    this.setInput(nextCommand || "");
+    this.setInput(nextCommand || '');
   }
 
   private handleTab() {
@@ -195,7 +192,7 @@ export class InputLineEditor implements LineEditor {
   private handleCtrlC() {
     if (!this.shell) return;
 
-    this.shell.outputToTerminal("^C", { newline: true });
+    this.shell.outputToTerminal('^C', { newline: true });
     this.createInputLine();
   }
 
@@ -221,7 +218,7 @@ export class InputLineEditor implements LineEditor {
     const afterCursor = input.slice(this.cursorSelectionEnd_);
 
     // 커서 앞 마지막 단어 + 공백
-    const newBeforeCursor = beforeCursor.replace(/(\s*)\S+\s*$/, "");
+    const newBeforeCursor = beforeCursor.replace(/(\s*)\S+\s*$/, '');
 
     const newCursor = newBeforeCursor.length;
     const newInput = newBeforeCursor + afterCursor;

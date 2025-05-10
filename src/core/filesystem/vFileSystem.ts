@@ -4,28 +4,28 @@ export interface FileSystem {
 }
 
 export interface FSNode {
-  type: "file" | "directory";
+  type: 'file' | 'directory';
   name: string;
   path: string;
   parent: string | null;
 }
 
 export interface FileNode extends FSNode {
-  type: "file";
+  type: 'file';
   text: string;
   extension: string;
   renderedContent?: string;
 }
 
 export interface DirectoryNode extends FSNode {
-  type: "directory";
+  type: 'directory';
   children: string[];
 }
 
 export function isDirectoryNode(node: FSNode): node is DirectoryNode {
-  return node.type === "directory";
+  return node.type === 'directory';
 }
 
 export function isFileNode(node: FSNode): node is FileNode {
-  return node.type === "file";
+  return node.type === 'file';
 }

@@ -9,7 +9,9 @@ This is the content of bar post
 ```js
 const a = 'b';
 ```
+
 ![asda](next.svg 'title 500*500')
+
 <div>hello div</div>
 ordere list 
 1. one
@@ -17,11 +19,12 @@ ordere list
 3. three
 
 unordere list
+
 - foo
 - bar
 - baz
 
-> [!note] 
+> [!note]
 > helo
 
 > common quote

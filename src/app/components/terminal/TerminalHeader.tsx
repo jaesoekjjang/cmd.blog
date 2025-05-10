@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useTheme } from "@/app/theme";
+import { useTheme } from '@/app/theme';
 
 export function TerminalHeader() {
   const [theme, toggleTheme] = useTheme();
@@ -12,14 +12,12 @@ export function TerminalHeader() {
         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
         <div className="w-3 h-3 rounded-full bg-green-500"></div>
       </div>
-      <div className="mx-auto font-medium text-terminal-text bg-terminal-header">
-        Cmd.blog
-      </div>
+      <div className="mx-auto font-medium text-terminal-text bg-terminal-header">Cmd.blog</div>
       <button
         onClick={toggleTheme}
         className="text-xs px-2 py-1 rounded bg-terminal-button text-terminal-text hover:bg-terminal-button-hover"
       >
-        {theme === "light" ? "☀️" : "🌙"}
+        {theme === 'light' ? '☀️' : '🌙'}
       </button>
     </div>
   );
