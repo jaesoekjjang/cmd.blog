@@ -6,12 +6,14 @@ export class InputLineEditor implements LineEditor {
   private shell: Shell | null = null;
   private input: string = '';
   private outputs: OutputOptions[] = [];
+  private suggestions: string[] = [];
 
   private cursorSelectionStart_: number = 0;
   private cursorSelectionEnd_: number = 0;
 
   private onInputChange?: (input: string) => void;
   private onOutputsChange?: (outputs: OutputOptions[]) => void;
+  private onSuggestionsChange?: (suggestions: string[]) => void;
   private onFocus?: () => void;
 
   private keyHandlers: Record<string, () => void | number> = {
@@ -34,10 +36,12 @@ export class InputLineEditor implements LineEditor {
   constructor(callbacks?: {
     onInputChange?: (input: string) => void;
     onOutputsChange?: (outputs: OutputOptions[]) => void;
+    onSuggestionsChange?: (suggestions: string[]) => void;
     onFocus?: () => void;
   }) {
     this.onInputChange = callbacks?.onInputChange;
     this.onOutputsChange = callbacks?.onOutputsChange;
+    this.onSuggestionsChange = callbacks?.onSuggestionsChange;
     this.onFocus = callbacks?.onFocus;
   }
 
@@ -88,6 +92,10 @@ export class InputLineEditor implements LineEditor {
     return this.cursorSelectionEnd_;
   }
 
+  getSuggestions() {
+    return this.suggestions;
+  }
+
   createInputLine() {
     this.setInput('');
     this.setSelection(0, 0);
@@ -101,6 +109,13 @@ export class InputLineEditor implements LineEditor {
     return {
       selectionStart: this.cursorSelectionStart_,
       selectionEnd: this.cursorSelectionEnd_,
+    };
+  }
+
+  getCursorPosition() {
+    return {
+      start: this.cursorSelectionStart_,
+      end: this.cursorSelectionEnd_,
     };
   }
 
@@ -185,8 +200,9 @@ export class InputLineEditor implements LineEditor {
   private handleTab() {
     if (!this.shell || !this.input) return;
 
-    // const suggestions = this.shell.getAutocompleteSuggestions(this.input);
-    return;
+    const suggestions = this.shell.getAutocompleteSuggestions();
+    this.suggestions = suggestions;
+    this.onSuggestionsChange?.(suggestions);
   }
 
   private handleCtrlC() {

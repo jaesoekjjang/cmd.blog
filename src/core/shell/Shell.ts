@@ -8,6 +8,7 @@ import { CommandResult } from '../commands/commands';
 import { renderFileNode } from '../renderer/fileNodeRenderer';
 import { LineEditor } from '../lineEditor/LineEditor';
 import { HistoryManager } from '../history';
+import { CompletionProvider } from '../completionProvider';
 
 const defaultShellOptions: ShellOptions = {
   dateFormat: '🕔 {HH}:{mm}:{ss}',
@@ -25,6 +26,8 @@ export class Shell {
   private commands: Command[];
   private commandHistoryManager: HistoryManager;
 
+  private completionProvider: CompletionProvider;
+
   private opts: ShellOptions;
   private promptState_: PromptState;
 
@@ -33,12 +36,14 @@ export class Shell {
     fileSystem,
     lineEditor,
     commandHistoryManager,
+    completionProvider,
     opts,
   }: {
     commands: Command[];
     fileSystem: FileSystem;
     lineEditor: LineEditor;
     commandHistoryManager: HistoryManager;
+    completionProvider: CompletionProvider;
     opts?: Partial<ShellOptions>;
   }) {
     this.commands = commands;
@@ -47,6 +52,7 @@ export class Shell {
     this.currentDirectory = '/';
     this.fileHistory = [];
     this.commandHistoryManager = commandHistoryManager;
+    this.completionProvider = completionProvider;
 
     this.opts = {
       ...defaultShellOptions,
@@ -109,6 +115,11 @@ export class Shell {
   /**
    * command 관련 methods
    */
+
+  getCommands() {
+    return [...this.commands];
+  }
+
   executeCommand(commandStr: string) {
     this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
       style: { foreground: terminalPromptPrefix(), bold: true },
@@ -155,19 +166,6 @@ export class Shell {
     }
   }
 
-  outputToTerminal(output: React.ReactNode, opts?: { newline?: boolean; style?: TextStyle; type?: 'text' | 'react' }) {
-    const { newline = false, style, type } = opts || {};
-
-    this.lineEditor.addOutput({ output, style, type });
-
-    if (newline) {
-      this.lineEditor.addOutput({
-        output: '\n',
-        type,
-      });
-    }
-  }
-
   getFullCommandHistory() {
     return this.commandHistoryManager.history;
   }
@@ -188,7 +186,22 @@ export class Shell {
     return this.commandHistoryManager.goToEnd();
   }
 
-  getAutocompleteSuggestions(input: string): string[] {
-    return this.commands.map(cmd => cmd.name).filter(name => name.startsWith(input));
+  outputToTerminal(output: React.ReactNode, opts?: { newline?: boolean; style?: TextStyle; type?: 'text' | 'react' }) {
+    const { newline = false, style, type } = opts || {};
+
+    this.lineEditor.addOutput({ output, style, type });
+
+    if (newline) {
+      this.lineEditor.addOutput({
+        output: '\n',
+        type,
+      });
+    }
+  }
+
+  getAutocompleteSuggestions() {
+    const suggestions = this.completionProvider.complete(this.lineEditor, this);
+    console.log('suggestions', suggestions);
+    return suggestions;
   }
 }

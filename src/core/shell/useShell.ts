@@ -5,6 +5,7 @@ import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
 import { OutputItem } from '@/core/lineEditor';
 import { InputLineEditor } from '../lineEditor/InputLineEditor';
+import { CommandCompletionStrategy, CompletionProvider, FileCompletionStrategy } from '../completionProvider';
 
 interface useLineEditorProps {
   commands: Command[];
@@ -14,10 +15,12 @@ interface useLineEditorProps {
 export function useShell({ commands, fileSystem }: useLineEditorProps) {
   const [input, setInput] = useState('');
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const outputIdRef = useRef(0);
 
+  // TODO: shell과 lineEditor의 역할 구분.
   const [lineEditor] = useState(
     () =>
       new InputLineEditor({
@@ -29,19 +32,29 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
           }));
           setOutputs(newOutputs);
         },
+        onSuggestionsChange: setSuggestions,
         onFocus: () => inputRef.current?.focus(),
       }),
   );
 
-  const [shell] = useState(
-    () =>
-      new Shell({
-        commands,
-        fileSystem,
-        lineEditor,
-        commandHistoryManager: new CommandHistoryManager(),
-      }),
-  );
+  const [shell] = useState(() => {
+    const commandHistoryManager = new CommandHistoryManager();
+
+    const completionProvider = new CompletionProvider([
+      new CommandCompletionStrategy(commands.map(cmd => cmd.name)),
+      new FileCompletionStrategy(fileSystem),
+    ]);
+
+    const shell = new Shell({
+      commands,
+      fileSystem,
+      lineEditor,
+      commandHistoryManager,
+      completionProvider,
+    });
+
+    return shell;
+  });
 
   useEffect(() => {
     lineEditor.setShell(shell);
@@ -91,6 +104,7 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
     handleKeyDown,
     handleTextInput,
     handleSelect,
+    suggestions,
     focus: () => inputRef.current?.focus(),
   };
 }

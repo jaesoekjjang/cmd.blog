@@ -13,10 +13,11 @@ interface TerminalProps {
 }
 
 export function Terminal({ fileSystem }: TerminalProps) {
-  const { input, outputs, inputRef, handleKeyDown, handleTextInput, handleSelect, focus, shell } = useShell({
-    fileSystem,
-    commands,
-  });
+  const { input, outputs, suggestions, inputRef, handleKeyDown, handleTextInput, handleSelect, focus, shell } =
+    useShell({
+      fileSystem,
+      commands,
+    });
 
   useEffect(() => {
     focus();
@@ -44,6 +45,13 @@ export function Terminal({ fileSystem }: TerminalProps) {
           prompt={shell.promptState}
         />
       </div>
+      {suggestions.map((suggestion, index) => {
+        return (
+          <div key={index} className="text-terminal-suggestion text-sm bg-terminal-suggestion-bg p-2 rounded-md my-1">
+            {suggestion}
+          </div>
+        );
+      })}
     </div>
   );
 }
