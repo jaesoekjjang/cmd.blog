@@ -1,2 +1,2 @@
-export type { HistoryManager } from './HistoryManager';
 export { CommandHistoryManager } from './CommandHistoryManager';
+export type { HistoryManager } from './HistoryManager';

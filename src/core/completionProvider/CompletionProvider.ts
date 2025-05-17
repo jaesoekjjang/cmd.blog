@@ -1,7 +1,7 @@
 import { LineEditor } from '@/core/lineEditor';
-import { Shell } from '../shell';
-import { DirectoryNode, FileSystem, FSNode } from '../filesystem';
 import { CommandType } from '../commands';
+import { DirectoryNode, FileSystem, FSNode } from '../filesystem';
+import { Shell } from '../shell';
 
 interface CursorContext {
   line: string;

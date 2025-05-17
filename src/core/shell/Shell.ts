@@ -1,14 +1,14 @@
+import { getThemeTokenResolver } from '@/app/theme';
 import { Command } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
-import { getThemeTokenResolver } from '@/app/theme';
-import { PromptState, ShellOptions } from './types';
 import tinydate from 'tinydate';
-import { TextStyle } from '../lineEditor';
 import { CommandResult } from '../commands/commands';
-import { renderFileNode } from '../renderer/fileNodeRenderer';
-import { LineEditor } from '../lineEditor/LineEditor';
-import { HistoryManager } from '../history';
 import { CompletionProvider } from '../completionProvider';
+import { HistoryManager } from '../history';
+import { TextStyle } from '../lineEditor';
+import { LineEditor } from '../lineEditor/LineEditor';
+import { renderFileNode } from '../renderer/fileNodeRenderer';
+import { PromptState, ShellOptions } from './types';
 
 const defaultShellOptions: ShellOptions = {
   dateFormat: '🕔 {HH}:{mm}:{ss}',

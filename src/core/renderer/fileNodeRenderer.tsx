@@ -1,5 +1,5 @@
-import { marked } from 'marked';
 import parse from 'html-react-parser';
+import { marked } from 'marked';
 import { FileNode } from '../filesystem';
 
 const renderer = new marked.Renderer();

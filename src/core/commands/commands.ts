@@ -1,5 +1,5 @@
-import { Shell } from '@/core/shell';
 import { FileNode, getAbsolutePath, isDirectory, isFileNode, isValidPath } from '@/core/filesystem';
+import { Shell } from '@/core/shell';
 import path, { normalize, resolve } from 'path';
 
 export type CommandType = 'ls' | 'cd' | 'cat' | 'clear' | 'pwd' | 'history' | 'help' | (string & {});

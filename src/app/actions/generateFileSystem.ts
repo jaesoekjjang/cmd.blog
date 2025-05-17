@@ -1,6 +1,6 @@
-import { join, basename, extname } from 'path';
-import { readdirSync, readFileSync } from 'fs';
 import { DirectoryNode, FileSystem } from '@/core/filesystem';
+import { readdirSync, readFileSync } from 'fs';
+import { basename, extname, join } from 'path';
 
 const rootDirectory = join(process.cwd(), 'src/files');
 

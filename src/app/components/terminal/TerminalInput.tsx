@@ -1,5 +1,5 @@
-import { RefObject } from 'react';
 import { PromptState } from '@/core/shell';
+import { RefObject } from 'react';
 
 interface TerminalInputProps {
   ref: RefObject<HTMLInputElement | null>;
