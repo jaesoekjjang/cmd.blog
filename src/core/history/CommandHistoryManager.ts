@@ -1,14 +1,14 @@
 import { HistoryManager } from './HistoryManager';
 
 export class CommandHistoryManager implements HistoryManager {
-  private readonly maxHistorySize = 1000;
+  private maxHistorySize: number;
   private history_: string[] = [];
   private historyIndex = 0;
-  private listeners: ((history: string[]) => void)[] = [];
 
-  constructor(initialHistory: string[] = []) {
+  constructor(initialHistory: string[] = [], maxHistorySize: number = 1000) {
     this.history_ = [...initialHistory];
     this.historyIndex = this.history_.length;
+    this.maxHistorySize = maxHistorySize;
   }
 
   get history() {
@@ -26,7 +26,6 @@ export class CommandHistoryManager implements HistoryManager {
   clear() {
     this.history_ = [];
     this.historyIndex = 0;
-    this.notifyListeners();
   }
 
   push(entry: string) {
@@ -38,7 +37,6 @@ export class CommandHistoryManager implements HistoryManager {
 
     this.history_.push(entry);
     this.historyIndex = this.history_.length;
-    this.notifyListeners();
   }
 
   current() {
@@ -78,19 +76,5 @@ export class CommandHistoryManager implements HistoryManager {
     }
     this.historyIndex = this.history_.length;
     return '';
-  }
-
-  subscribe(listener: (history: string[]) => void) {
-    this.listeners.push(listener);
-    return () => this.removeListener(listener);
-  }
-
-  removeListener(listener: (history: string[]) => void) {
-    this.listeners = this.listeners.filter(l => l !== listener);
-  }
-
-  private notifyListeners() {
-    const historyCopy = [...this.history_];
-    this.listeners.forEach(listener => listener(historyCopy));
   }
 }
