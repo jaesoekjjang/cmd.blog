@@ -1,2 +1,2 @@
 export { Shell } from './Shell';
-export { PromptState, ShellOptions } from './types';
+export type { AutoComplete, PromptState, ShellOptions } from './types';

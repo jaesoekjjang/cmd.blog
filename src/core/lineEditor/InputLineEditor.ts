@@ -2,30 +2,49 @@ import { Shell } from '../shell';
 import { LineEditor } from './LineEditor';
 import { OutputOptions } from './types';
 
+const getKeyName = (e: React.KeyboardEvent) => {
+  if (e.ctrlKey) {
+    return `<C-${e.key}>`;
+  } else if (e.shiftKey) {
+    return `<S-${e.key}>`;
+  } else if (e.altKey) {
+    return `<A-${e.key}>`;
+  }
+
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    return 'Space';
+  }
+
+  return e.key;
+};
+
 export class InputLineEditor implements LineEditor {
   private shell: Shell | null = null;
   private input: string = '';
   private outputs: OutputOptions[] = [];
   private suggestions: string[] = [];
 
+  private isAutoCompleteActive: boolean = false;
+  private selectedSuggestionIndex: number = -1;
+
   private cursorSelectionStart_: number = 0;
   private cursorSelectionEnd_: number = 0;
 
   private onInputChange?: (input: string) => void;
   private onOutputsChange?: (outputs: OutputOptions[]) => void;
-  private onSuggestionsChange?: (suggestions: string[]) => void;
+  private onSuggestionsChange?: (suggestions: string[], index: number) => void;
   private onFocus?: () => void;
 
   private keyHandlers: Record<string, () => void | number> = {
-    Enter: this.handleEnter.bind(this),
     ArrowUp: this.handleArrowUp.bind(this),
     ArrowDown: this.handleArrowDown.bind(this),
     ArrowLeft: this.moveCursorLeft.bind(this),
     ArrowRight: this.moveCursorRight.bind(this),
+    Enter: this.handleEnter.bind(this),
     Tab: this.handleTab.bind(this),
     Home: this.moveCursorToStart.bind(this),
     End: this.moveCursorToEnd.bind(this),
-    '<C-c>': this.handleCtrlC.bind(this),
+    Space: this.handleSpace.bind(this),
     '<C-l>': this.handleCtrlL.bind(this),
     '<C-u>': this.handleCtrlU.bind(this),
     '<C-e>': this.moveCursorToEnd.bind(this),
@@ -36,7 +55,7 @@ export class InputLineEditor implements LineEditor {
   constructor(callbacks?: {
     onInputChange?: (input: string) => void;
     onOutputsChange?: (outputs: OutputOptions[]) => void;
-    onSuggestionsChange?: (suggestions: string[]) => void;
+    onSuggestionsChange?: (suggestions: string[], index: number) => void;
     onFocus?: () => void;
   }) {
     this.onInputChange = callbacks?.onInputChange;
@@ -161,26 +180,17 @@ export class InputLineEditor implements LineEditor {
   }
 
   handleKeyDown(e: React.KeyboardEvent) {
-    const handlerKey = e.ctrlKey ? `<C-${e.key}>` : e.key;
-    const handler = this.keyHandlers[handlerKey];
+    const keyName = getKeyName(e);
+    const handler = this.keyHandlers[keyName];
+
+    if (keyName !== 'Tab' && this.isAutoCompleteActive) {
+      this.deactivateAutoComplete();
+    }
 
     if (handler) {
       e.preventDefault();
       return handler();
     }
-  }
-
-  private handleEnter() {
-    if (!this.shell) return;
-
-    const trimmedInput = this.input.trim();
-    if (trimmedInput) {
-      this.shell.executeCommand(trimmedInput);
-    } else {
-      this.shell.outputToTerminal('', { newline: true });
-    }
-
-    this.createInputLine();
   }
 
   private handleArrowUp() {
@@ -197,19 +207,75 @@ export class InputLineEditor implements LineEditor {
     this.setInput(nextCommand || '');
   }
 
-  private handleTab() {
-    if (!this.shell || !this.input) return;
-
-    const suggestions = this.shell.getAutocompleteSuggestions();
-    this.suggestions = suggestions;
-    this.onSuggestionsChange?.(suggestions);
-  }
-
-  private handleCtrlC() {
+  private handleEnter() {
     if (!this.shell) return;
 
-    this.shell.outputToTerminal('^C', { newline: true });
+    const trimmedInput = this.input.trim();
+    if (trimmedInput) {
+      this.shell.executeCommand(trimmedInput);
+    } else {
+      this.shell.outputToTerminal('', { newline: true });
+    }
+
     this.createInputLine();
+  }
+
+  private handleSpace() {
+    if (!this.shell) return;
+
+    this.setInput(this.input + ' ');
+  }
+
+  private handleTab() {
+    if (!this.shell) return;
+
+    const trimmedInput = this.input.trim();
+
+    if (!trimmedInput) {
+      this.deactivateAutoComplete();
+      this.setInput(this.input + '\t');
+      return;
+    }
+
+    if (!this.isAutoCompleteActive) {
+      const suggestions = this.shell.getAutocompleteSuggestions();
+      this.suggestions = suggestions;
+      this.isAutoCompleteActive = true;
+      this.selectedSuggestionIndex = 0;
+      this.applySuggestion(this.selectedSuggestionIndex);
+    } else if (this.suggestions.length > 0) {
+      this.selectedSuggestionIndex = ++this.selectedSuggestionIndex % this.suggestions.length;
+      this.applySuggestion(this.selectedSuggestionIndex);
+    }
+  }
+
+  // 현재 커서가 위치한 단어를 suggestion으로 대치
+  private applySuggestion(index: number) {
+    if (index >= 0 && index < this.suggestions.length) {
+      const suggestion = this.suggestions[index];
+
+      const input = this.input;
+      const cursorStart = this.cursorSelectionStart_;
+      const cursorEnd = this.cursorSelectionEnd_;
+      const beforeCursor = input.slice(0, cursorStart);
+      const afterCursor = input.slice(cursorEnd);
+      const lastWordBoundary = beforeCursor.lastIndexOf(' ');
+
+      const newBeforeCursor =
+        lastWordBoundary === -1 ? suggestion : beforeCursor.slice(0, lastWordBoundary + 1) + suggestion;
+      const newInput = newBeforeCursor + afterCursor;
+
+      this.cursorSelectionStart_ = this.cursorSelectionEnd_ = newBeforeCursor?.length || 0;
+      this.setInput(newInput);
+      this.onSuggestionsChange?.(this.suggestions, this.selectedSuggestionIndex);
+    }
+  }
+
+  private deactivateAutoComplete() {
+    this.isAutoCompleteActive = false;
+    this.selectedSuggestionIndex = -1;
+    this.suggestions = [];
+    this.onSuggestionsChange?.([], this.selectedSuggestionIndex);
   }
 
   private handleCtrlL() {

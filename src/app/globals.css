@@ -19,6 +19,9 @@
   --terminal-button-light: color-mix(in srgb, theme('colors.stone.100') 80%, theme('colors.stone.200') 30%);
   --terminal-button-hover-light: theme('colors.stone.200');
 
+  --terminal-autocomplete-suggestion-bg-light: theme('colors.stone.500');
+  --terminal-autocomplete-suggestion-text-light: theme('colors.white');
+
   --terminal-prompt-directory-light: theme('colors.cyan.600');
   --terminal-prompt-prefix-light: theme('colors.lime.600');
   --terminal-prompt-time-light: theme('colors.stone.400');
@@ -33,6 +36,9 @@
   --terminal-header-dark: theme('colors.gray.800');
   --terminal-button-dark: theme('colors.gray.700');
   --terminal-button-hover-dark: theme('colors.gray.600');
+
+  --terminal-autocomplete-suggestion-bg-dark: theme('colors.gray.300');
+  --terminal-autocomplete-suggestion-text-dark: theme('colors.gray.900');
 
   /* common theme */
   --terminal-prompt-directory: theme('colors.cyan.600');
@@ -51,6 +57,10 @@
   --color-terminal-header: var(--terminal-header-light);
   --color-terminal-button: var(--terminal-button-light);
   --color-terminal-button-hover: var(--terminal-button-hover-light);
+
+  --color-terminal-autocomplete-suggestion-bg: var(--terminal-autocomplete-suggestion-bg-light);
+  --color-terminal-autocomplete-suggestion-text: var(--terminal-autocomplete-suggestion-text-light);
+  --color-terminal-autocomplete-suggestion-border: var(--terminal-autocomplete-suggestion-border-light);
 
   --color-terminal-prompt-directory: var(--terminal-prompt-directory);
   --color-terminal-prompt-prefix: var(--terminal-prompt-prefix);
@@ -72,6 +82,9 @@
     --color-terminal-header: var(--terminal-header-dark);
     --color-terminal-button: var(--terminal-button-dark);
     --color-terminal-button-hover: var(--terminal-button-hover-dark);
+
+    --color-terminal-autocomplete-suggestion-bg: var(--terminal-autocomplete-suggestion-bg-dark);
+    --color-terminal-autocomplete-suggestion-text: var(--terminal-autocomplete-suggestion-text-dark);
 
     --color-terminal-scrollbar: var(--color-terminal-border);
     --color-terminal-scrollbar-hover: var(--color-terminal-button-hover);

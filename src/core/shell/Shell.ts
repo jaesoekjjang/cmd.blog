@@ -200,8 +200,6 @@ export class Shell {
   }
 
   getAutocompleteSuggestions() {
-    const suggestions = this.completionProvider.complete(this.lineEditor, this);
-    console.log('suggestions', suggestions);
-    return suggestions;
+    return this.completionProvider.complete(this.lineEditor, this);
   }
 }

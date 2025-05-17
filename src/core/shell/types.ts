@@ -11,3 +11,9 @@ export interface ShellOptions {
   dateFormat: string;
   promptPrefix: string;
 }
+
+export interface AutoComplete {
+  suggestions: string[];
+  index: number;
+}
+

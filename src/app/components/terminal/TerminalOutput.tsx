@@ -1,13 +1,14 @@
 'use client';
 
-import { TextStyle, OutputItem } from '@/core/lineEditor';
+import { OutputItem, TextStyle } from '@/core/lineEditor';
+import { memo } from 'react';
 import { Prose } from '../prose/prose';
 
 interface OutputProps {
   output: OutputItem[];
 }
 
-export function TerminalOutput({ output }: OutputProps) {
+export const TerminalOutput = memo(function TerminalOutput({ output }: OutputProps) {
   return (
     <div className="whitespace-pre-line data-[output-exists=true]:mb-4" data-output-exists={output.length > 0}>
       {output.map(item =>
@@ -21,7 +22,7 @@ export function TerminalOutput({ output }: OutputProps) {
       )}
     </div>
   );
-}
+});
 
 function StyledText({ children, style }: { children: string; style?: TextStyle }) {
   return (

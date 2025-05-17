@@ -1,11 +1,12 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Shell } from './Shell';
 import { Command } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
 import { OutputItem } from '@/core/lineEditor';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CompletionProvider } from '../completionProvider';
 import { InputLineEditor } from '../lineEditor/InputLineEditor';
-import { CommandCompletionStrategy, CompletionProvider, FileCompletionStrategy } from '../completionProvider';
+import { Shell } from './Shell';
+import { AutoComplete } from './types';
 
 interface useLineEditorProps {
   commands: Command[];
@@ -15,7 +16,10 @@ interface useLineEditorProps {
 export function useShell({ commands, fileSystem }: useLineEditorProps) {
   const [input, setInput] = useState('');
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [autoComplete, setAutoComplete] = useState<AutoComplete>({
+    suggestions: [],
+    index: 0,
+  });
 
   const inputRef = useRef<HTMLInputElement>(null);
   const outputIdRef = useRef(0);
@@ -32,19 +36,14 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
           }));
           setOutputs(newOutputs);
         },
-        onSuggestionsChange: setSuggestions,
+        onSuggestionsChange: (suggestions, index) => setAutoComplete({ suggestions, index }),
         onFocus: () => inputRef.current?.focus(),
       }),
   );
 
   const [shell] = useState(() => {
     const commandHistoryManager = new CommandHistoryManager();
-
-    const completionProvider = new CompletionProvider([
-      new CommandCompletionStrategy(commands.map(cmd => cmd.name)),
-      new FileCompletionStrategy(fileSystem),
-    ]);
-
+    const completionProvider = new CompletionProvider();
     const shell = new Shell({
       commands,
       fileSystem,
@@ -104,7 +103,7 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
     handleKeyDown,
     handleTextInput,
     handleSelect,
-    suggestions,
+    autoComplete,
     focus: () => inputRef.current?.focus(),
   };
 }

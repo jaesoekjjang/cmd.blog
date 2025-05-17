@@ -5,8 +5,10 @@ import { CompletionStrategy } from './CompletionStrategy';
 export class FileCompletionStrategy implements CompletionStrategy {
   constructor(private readonly fileSystem: FileSystem) {}
 
-  canHandle(input: string): boolean {
-    return input.startsWith('/') || input.startsWith('./') || input.startsWith('../');
+  canHandle(args: string[], currentArg: string): boolean {
+    if (args.length === 0) {
+      return false;
+    }
   }
 
   complete(input: string, shell: Shell): string[] {
