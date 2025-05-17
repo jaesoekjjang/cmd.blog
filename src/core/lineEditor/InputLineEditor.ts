@@ -1,32 +1,9 @@
+import { getKeyName } from './getKeyName';
 import { LineEditor, LineEditorCallbacks } from './LineEditor';
 import { OutputOptions } from './types';
 
-const getKeyName = (e: React.KeyboardEvent) => {
-  if (e.ctrlKey) {
-    return `<C-${e.key}>`;
-  } else if (e.shiftKey) {
-    return `<S-${e.key}>`;
-  } else if (e.altKey) {
-    return `<A-${e.key}>`;
-  }
-
-  if (e.key === ' ' || e.key === 'Spacebar') {
-    return 'Space';
-  }
-
-  return e.key;
-};
-
 export class InputLineEditor extends LineEditor {
-  private input: string = '';
   private outputs: OutputOptions[] = [];
-  private suggestions: string[] = [];
-
-  private isAutoCompleteActive: boolean = false;
-  private selectedSuggestionIndex: number = -1;
-
-  private cursorSelectionStart_: number = 0;
-  private cursorSelectionEnd_: number = 0;
 
   private keyHandlers: Record<string, () => void | number> = {
     ArrowUp: this.handleArrowUp.bind(this),
@@ -49,14 +26,6 @@ export class InputLineEditor extends LineEditor {
     super(callbacks);
   }
 
-  get cursorSelectionStart() {
-    return this.cursorSelectionStart_;
-  }
-
-  get cursorSelectionEnd() {
-    return this.cursorSelectionEnd_;
-  }
-
   getInput(): string {
     return this.input;
   }
@@ -65,13 +34,6 @@ export class InputLineEditor extends LineEditor {
     return this.suggestions;
   }
 
-  getCursorPosition() {
-    return {
-      start: this.cursorSelectionStart_,
-      end: this.cursorSelectionEnd_,
-    };
-  }
-  
   clear() {
     this.outputs = [];
     this.callbacks.onOutputsChange?.(this.outputs);
@@ -97,57 +59,6 @@ export class InputLineEditor extends LineEditor {
     this.setInput('');
     this.setSelection(0, 0);
     this.callbacks.onRequestLastCommand?.();
-  }
-
-  setSelection(start: number, end: number) {
-    this.cursorSelectionStart_ = Math.max(0, Math.min(start, this.input.length));
-    this.cursorSelectionEnd_ = Math.max(0, Math.min(end, this.input.length));
-
-    return {
-      selectionStart: this.cursorSelectionStart_,
-      selectionEnd: this.cursorSelectionEnd_,
-    };
-  }
-
-  moveCursorToEnd() {
-    this.cursorSelectionStart_ = this.input.length;
-    this.cursorSelectionEnd_ = this.input.length;
-    return this.cursorSelectionEnd_;
-  }
-
-  moveCursorToStart() {
-    this.cursorSelectionStart_ = 0;
-    this.cursorSelectionEnd_ = 0;
-    return this.cursorSelectionEnd_;
-  }
-
-  moveCursorLeft() {
-    if (this.cursorSelectionEnd_ > 0) {
-      // 범위 선택이 있으면 선택을 취소하고 시작 위치로 커서 이동
-      if (this.cursorSelectionStart_ !== this.cursorSelectionEnd_) {
-        this.cursorSelectionEnd_ = this.cursorSelectionStart_;
-      } else {
-        // 있다면 왼쪽으로 커서 이동
-        this.cursorSelectionStart_--;
-        this.cursorSelectionEnd_ = this.cursorSelectionStart_;
-      }
-    }
-
-    return this.cursorSelectionEnd_;
-  }
-
-  moveCursorRight() {
-    if (this.cursorSelectionEnd_ < this.input.length) {
-      // 범위 선택이 있으면 선택을 취소하고 끝 위치로 커서 이동
-      if (this.cursorSelectionStart_ !== this.cursorSelectionEnd_) {
-        this.cursorSelectionStart_ = this.cursorSelectionEnd_;
-      } else {
-        // 없다면 오른쪽으로 커서 이동
-        this.cursorSelectionEnd_++;
-        this.cursorSelectionStart_ = this.cursorSelectionEnd_;
-      }
-    }
-    return this.cursorSelectionEnd_;
   }
 
   handleKeyDown(e: React.KeyboardEvent) {
@@ -269,12 +180,5 @@ export class InputLineEditor extends LineEditor {
       this.setInput(newInput);
       this.callbacks.onSuggestionsChange?.(this.suggestions, this.selectedSuggestionIndex);
     }
-  }
-
-  private deactivateAutoComplete() {
-    this.isAutoCompleteActive = false;
-    this.selectedSuggestionIndex = -1;
-    this.suggestions = [];
-    this.callbacks.onSuggestionsChange?.([], this.selectedSuggestionIndex);
   }
 }

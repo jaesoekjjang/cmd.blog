@@ -33,7 +33,7 @@ export class CompletionProvider {
 
   private extractCursorContext(lineEditor: LineEditor): CursorContext | null {
     const line = lineEditor.getInput();
-    const { end: cursor } = lineEditor.getCursorPosition();
+    const { end: cursor } = lineEditor.cursorPosition;
 
     if (line[cursor] === ' ') {
       return null;

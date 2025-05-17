@@ -57,7 +57,8 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
   const syncCursorPosition = useCallback(() => {
     const inputEl = inputRef.current;
     if (inputEl && lineEditor) {
-      inputEl.setSelectionRange(lineEditor.cursorSelectionStart, lineEditor.cursorSelectionEnd);
+      const { start, end } = lineEditor.cursorPosition;
+      inputEl.setSelectionRange(start, end);
     }
   }, [lineEditor]);
 

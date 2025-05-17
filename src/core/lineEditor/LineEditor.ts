@@ -1,15 +1,16 @@
 import { OutputOptions } from './types';
 
 export abstract class LineEditor {
+  protected input: string = '';
+
+  protected cursorSelectionStart_: number = 0;
+  protected cursorSelectionEnd_: number = 0;
+
+  protected suggestions: string[] = [];
+  protected isAutoCompleteActive: boolean = false;
+  protected selectedSuggestionIndex: number = -1;
+
   protected callbacks: LineEditorCallbacks;
-
-  constructor(callbacks: LineEditorCallbacks) {
-    this.callbacks = callbacks || {};
-  }
-
-  setCallbacks(callbacks: Partial<LineEditorCallbacks>) {
-    this.callbacks = { ...this.callbacks, ...callbacks };
-  }
 
   abstract clear(): void;
   abstract getInput(): string;
@@ -18,11 +19,79 @@ export abstract class LineEditor {
   abstract getSuggestions(): string[];
   /* eslint-disable-next-line */
   abstract handleKeyDown(...args: any[]): void;
-  abstract getCursorPosition(): { start: number; end: number };
-  abstract moveCursorToEnd(): void;
-  abstract moveCursorToStart(): void;
-  abstract moveCursorLeft(): void;
-  abstract moveCursorRight(): void;
+
+  constructor(callbacks: LineEditorCallbacks) {
+    this.callbacks = callbacks || {};
+  }
+
+  protected moveCursorToEnd() {
+    this.cursorSelectionStart_ = this.input.length;
+    this.cursorSelectionEnd_ = this.input.length;
+    return this.cursorSelectionEnd_;
+  }
+
+  protected moveCursorToStart() {
+    this.cursorSelectionStart_ = 0;
+    this.cursorSelectionEnd_ = 0;
+    return this.cursorSelectionEnd_;
+  }
+
+  protected moveCursorLeft() {
+    if (this.cursorSelectionEnd_ > 0) {
+      // 범위 선택이 있으면 선택을 취소하고 시작 위치로 커서 이동
+      if (this.cursorSelectionStart_ !== this.cursorSelectionEnd_) {
+        this.cursorSelectionEnd_ = this.cursorSelectionStart_;
+      } else {
+        // 있다면 왼쪽으로 커서 이동
+        this.cursorSelectionStart_--;
+        this.cursorSelectionEnd_ = this.cursorSelectionStart_;
+      }
+    }
+
+    return this.cursorSelectionEnd_;
+  }
+
+  protected moveCursorRight() {
+    if (this.cursorSelectionEnd_ < this.input.length) {
+      // 범위 선택이 있으면 선택을 취소하고 끝 위치로 커서 이동
+      if (this.cursorSelectionStart_ !== this.cursorSelectionEnd_) {
+        this.cursorSelectionStart_ = this.cursorSelectionEnd_;
+      } else {
+        // 없다면 오른쪽으로 커서 이동
+        this.cursorSelectionEnd_++;
+        this.cursorSelectionStart_ = this.cursorSelectionEnd_;
+      }
+    }
+    return this.cursorSelectionEnd_;
+  }
+
+  protected deactivateAutoComplete() {
+    this.isAutoCompleteActive = false;
+    this.selectedSuggestionIndex = -1;
+    this.suggestions = [];
+    this.callbacks.onSuggestionsChange?.([], this.selectedSuggestionIndex);
+  }
+
+  get cursorPosition() {
+    return {
+      start: this.cursorSelectionStart_,
+      end: this.cursorSelectionEnd_,
+    };
+  }
+
+  setCallbacks(callbacks: Partial<LineEditorCallbacks>) {
+    this.callbacks = { ...this.callbacks, ...callbacks };
+  }
+
+  setSelection(start: number, end: number) {
+    this.cursorSelectionStart_ = Math.max(0, Math.min(start, this.input.length));
+    this.cursorSelectionEnd_ = Math.max(0, Math.min(end, this.input.length));
+
+    return {
+      selectionStart: this.cursorSelectionStart_,
+      selectionEnd: this.cursorSelectionEnd_,
+    };
+  }
 }
 
 export interface LineEditorCallbacks {
