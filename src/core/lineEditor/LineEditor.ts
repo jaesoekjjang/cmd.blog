@@ -1,20 +1,38 @@
 import { OutputOptions } from './types';
 
-export interface LineEditor {
-  clear: () => void;
-  focus: () => void;
-  getInput: () => string;
-  setInput: (input: string) => void;
-  addOutput: (options: OutputOptions) => void;
-  getSuggestions: () => string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleKeyDown: (...args: any[]) => void;
-  getCursorPosition: () => {
-    start: number;
-    end: number;
-  };
-  moveCursorToEnd: () => void;
-  moveCursorToStart: () => void;
-  moveCursorLeft: () => void;
-  moveCursorRight: () => void;
+export abstract class LineEditor {
+  protected callbacks: LineEditorCallbacks;
+
+  constructor(callbacks: LineEditorCallbacks) {
+    this.callbacks = callbacks || {};
+  }
+
+  setCallbacks(callbacks: Partial<LineEditorCallbacks>) {
+    this.callbacks = { ...this.callbacks, ...callbacks };
+  }
+
+  abstract clear(): void;
+  abstract getInput(): string;
+  abstract setInput(input: string): void;
+  abstract addOutput(options: OutputOptions): void;
+  abstract getSuggestions(): string[];
+  /* eslint-disable-next-line */
+  abstract handleKeyDown(...args: any[]): void;
+  abstract getCursorPosition(): { start: number; end: number };
+  abstract moveCursorToEnd(): void;
+  abstract moveCursorToStart(): void;
+  abstract moveCursorLeft(): void;
+  abstract moveCursorRight(): void;
+}
+
+export interface LineEditorCallbacks {
+  onInputChange?: (input: string) => void;
+  onOutputsChange?: (outputs: OutputOptions[]) => void;
+  onSuggestionsChange?: (suggestions: string[], index: number) => void;
+  onCommandExecute?: (command: string) => void;
+  onRequestPrevCommand?: () => void;
+  onRequestNextCommand?: () => void;
+  onRequestLastCommand?: () => void;
+  onRequestClear?: () => void;
+  onRequestAutoComplete?: () => void;
 }

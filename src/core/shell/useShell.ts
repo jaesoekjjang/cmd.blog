@@ -2,7 +2,7 @@ import { Command } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
 import { OutputItem } from '@/core/lineEditor';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { CompletionProvider } from '../completionProvider';
 import { InputLineEditor } from '../lineEditor/InputLineEditor';
 import { Shell } from './Shell';
@@ -24,7 +24,6 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const outputIdRef = useRef(0);
 
-  // TODO: shell과 lineEditor의 역할 구분.
   const [lineEditor] = useState(
     () =>
       new InputLineEditor({
@@ -37,7 +36,6 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
           setOutputs(newOutputs);
         },
         onSuggestionsChange: (suggestions, index) => setAutoComplete({ suggestions, index }),
-        onFocus: () => inputRef.current?.focus(),
       }),
   );
 
@@ -54,10 +52,6 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
 
     return shell;
   });
-
-  useEffect(() => {
-    lineEditor.setShell(shell);
-  }, [lineEditor, shell]);
 
   // lineEditor->input 커서 위치 동기화
   const syncCursorPosition = useCallback(() => {

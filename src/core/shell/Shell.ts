@@ -1,13 +1,11 @@
 import { getThemeTokenResolver } from '@/app/theme';
-import { Command } from '@/core/commands';
+import { CompletionProvider } from '@/core//completionProvider';
+import { HistoryManager } from '@/core//history';
+import { Command, type CommandResult } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
+import { LineEditor, type LineEditorCallbacks, type TextStyle } from '@/core/lineEditor';
+import { renderFileNode } from '@/core/renderer/fileNodeRenderer';
 import tinydate from 'tinydate';
-import { CommandResult } from '../commands/commands';
-import { CompletionProvider } from '../completionProvider';
-import { HistoryManager } from '../history';
-import { TextStyle } from '../lineEditor';
-import { LineEditor } from '../lineEditor/LineEditor';
-import { renderFileNode } from '../renderer/fileNodeRenderer';
 import { PromptState, ShellOptions } from './types';
 
 const defaultShellOptions: ShellOptions = {
@@ -65,6 +63,8 @@ export class Shell {
       date: tinydate(this.opts.dateFormat)(new Date()),
     };
 
+    this.setupLineEditorCallbacks(lineEditor);
+
     this.updateShellState();
   }
 
@@ -82,9 +82,6 @@ export class Shell {
     };
   }
 
-  /**
-   * fileSystem 관련methods
-   */
   changeDirectory(dir: string) {
     this.currentDirectory = dir;
     this.updateShellState();
@@ -99,11 +96,6 @@ export class Shell {
     return this.currentDirectory;
   }
 
-  clearOutput() {
-    this.lineEditor.clear();
-    this.updateShellState();
-  }
-
   getFileHistory() {
     return [...this.fileHistory];
   }
@@ -112,9 +104,23 @@ export class Shell {
     this.fileHistory.push(file);
   }
 
-  /**
-   * command 관련 methods
-   */
+  clearOutput() {
+    this.lineEditor.clear();
+    this.updateShellState();
+  }
+
+  outputToTerminal(output: React.ReactNode, opts?: { newline?: boolean; style?: TextStyle; type?: 'text' | 'react' }) {
+    const { newline = false, style, type } = opts || {};
+
+    this.lineEditor.addOutput({ output, style, type });
+
+    if (newline) {
+      this.lineEditor.addOutput({
+        output: '\n',
+        type,
+      });
+    }
+  }
 
   getCommands() {
     return [...this.commands];
@@ -186,20 +192,41 @@ export class Shell {
     return this.commandHistoryManager.goToEnd();
   }
 
-  outputToTerminal(output: React.ReactNode, opts?: { newline?: boolean; style?: TextStyle; type?: 'text' | 'react' }) {
-    const { newline = false, style, type } = opts || {};
+  private setupLineEditorCallbacks(lineEditor: LineEditor) {
+    const callbacks: LineEditorCallbacks = {
+      onCommandExecute: command => {
+        if (!command) {
+          this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
+            style: { foreground: terminalPromptPrefix(), bold: true },
+            newline: true,
+          });
+          return;
+        }
 
-    this.lineEditor.addOutput({ output, style, type });
+        this.executeCommand(command);
+      },
+      onRequestPrevCommand: () => {
+        return this.getPreviousCommand();
+      },
+      onRequestNextCommand: () => {
+        return this.getNextCommand();
+      },
+      onRequestLastCommand: () => {
+        return this.goToLastCommand();
+      },
+      onRequestClear: () => {
+        this.clearOutput();
+      },
+      onRequestAutoComplete: () => {
+        return this.getAutocompleteSuggestions();
+      },
+    };
 
-    if (newline) {
-      this.lineEditor.addOutput({
-        output: '\n',
-        type,
-      });
-    }
+    lineEditor.setCallbacks(callbacks);
   }
 
   getAutocompleteSuggestions() {
     return this.completionProvider.complete(this.lineEditor, this);
   }
 }
+

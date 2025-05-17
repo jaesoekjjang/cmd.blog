@@ -1,5 +1,4 @@
-import { Shell } from '../shell';
-import { LineEditor } from './LineEditor';
+import { LineEditor, LineEditorCallbacks } from './LineEditor';
 import { OutputOptions } from './types';
 
 const getKeyName = (e: React.KeyboardEvent) => {
@@ -18,8 +17,7 @@ const getKeyName = (e: React.KeyboardEvent) => {
   return e.key;
 };
 
-export class InputLineEditor implements LineEditor {
-  private shell: Shell | null = null;
+export class InputLineEditor extends LineEditor {
   private input: string = '';
   private outputs: OutputOptions[] = [];
   private suggestions: string[] = [];
@@ -29,11 +27,6 @@ export class InputLineEditor implements LineEditor {
 
   private cursorSelectionStart_: number = 0;
   private cursorSelectionEnd_: number = 0;
-
-  private onInputChange?: (input: string) => void;
-  private onOutputsChange?: (outputs: OutputOptions[]) => void;
-  private onSuggestionsChange?: (suggestions: string[], index: number) => void;
-  private onFocus?: () => void;
 
   private keyHandlers: Record<string, () => void | number> = {
     ArrowUp: this.handleArrowUp.bind(this),
@@ -52,16 +45,8 @@ export class InputLineEditor implements LineEditor {
     '<C-w>': this.handleCtrlW.bind(this),
   };
 
-  constructor(callbacks?: {
-    onInputChange?: (input: string) => void;
-    onOutputsChange?: (outputs: OutputOptions[]) => void;
-    onSuggestionsChange?: (suggestions: string[], index: number) => void;
-    onFocus?: () => void;
-  }) {
-    this.onInputChange = callbacks?.onInputChange;
-    this.onOutputsChange = callbacks?.onOutputsChange;
-    this.onSuggestionsChange = callbacks?.onSuggestionsChange;
-    this.onFocus = callbacks?.onFocus;
+  constructor(callbacks: LineEditorCallbacks = {}) {
+    super(callbacks);
   }
 
   get cursorSelectionStart() {
@@ -72,30 +57,29 @@ export class InputLineEditor implements LineEditor {
     return this.cursorSelectionEnd_;
   }
 
-  setShell(shell: Shell) {
-    this.shell = shell;
+  getInput(): string {
+    return this.input;
   }
 
+  getSuggestions() {
+    return this.suggestions;
+  }
+
+  getCursorPosition() {
+    return {
+      start: this.cursorSelectionStart_,
+      end: this.cursorSelectionEnd_,
+    };
+  }
+  
   clear() {
     this.outputs = [];
-    this.onOutputsChange?.(this.outputs);
+    this.callbacks.onOutputsChange?.(this.outputs);
   }
 
   addOutput(options: OutputOptions) {
     this.outputs.push(options);
-    if (this.onOutputsChange) {
-      this.onOutputsChange([...this.outputs]);
-    }
-  }
-
-  focus() {
-    if (this.onFocus) {
-      this.onFocus();
-    }
-  }
-
-  getInput(): string {
-    return this.input;
+    this.callbacks.onOutputsChange?.([...this.outputs]);
   }
 
   setInput(input: string, updateCursor = true) {
@@ -104,21 +88,15 @@ export class InputLineEditor implements LineEditor {
       this.cursorSelectionStart_ = input.length;
       this.cursorSelectionEnd_ = input.length;
     }
-    if (this.onInputChange) {
-      this.onInputChange(input);
-    }
+    this.callbacks.onInputChange?.(input);
 
     return this.cursorSelectionEnd_;
-  }
-
-  getSuggestions() {
-    return this.suggestions;
   }
 
   createInputLine() {
     this.setInput('');
     this.setSelection(0, 0);
-    this.shell?.goToLastCommand();
+    this.callbacks.onRequestLastCommand?.();
   }
 
   setSelection(start: number, end: number) {
@@ -128,13 +106,6 @@ export class InputLineEditor implements LineEditor {
     return {
       selectionStart: this.cursorSelectionStart_,
       selectionEnd: this.cursorSelectionEnd_,
-    };
-  }
-
-  getCursorPosition() {
-    return {
-      start: this.cursorSelectionStart_,
-      end: this.cursorSelectionEnd_,
     };
   }
 
@@ -193,42 +164,71 @@ export class InputLineEditor implements LineEditor {
     }
   }
 
-  private handleArrowUp() {
-    if (!this.shell) return;
+  handleTextInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const newInput = e.target.value;
 
-    const prevCommand = this.shell.getPreviousCommand();
-    this.setInput(prevCommand || '');
+    /**
+     * @description 단축키로 커서 이동 시, Input과 LineEditor 사이 커서 위치가 동기화되지 않기 때문에
+     * 커서 위치 자동 업데이트 안 함
+     * */
+    this.setInput(newInput, false);
+
+    // input의 입력 이벤트로부터 선택 범위 manual 업데이트
+    if (e.target.selectionStart !== null && e.target.selectionEnd !== null) {
+      this.setSelection(e.target.selectionStart, e.target.selectionEnd);
+    }
+  }
+
+  private handleArrowUp() {
+    const prevCommand = this.callbacks.onRequestPrevCommand?.();
+    if (prevCommand !== undefined) {
+      this.setInput(prevCommand || '');
+    }
   }
 
   private handleArrowDown() {
-    if (!this.shell) return;
-
-    const nextCommand = this.shell.getNextCommand();
-    this.setInput(nextCommand || '');
+    const nextCommand = this.callbacks.onRequestNextCommand?.();
+    if (nextCommand !== undefined) {
+      this.setInput(nextCommand || '');
+    }
   }
 
   private handleEnter() {
-    if (!this.shell) return;
-
     const trimmedInput = this.input.trim();
-    if (trimmedInput) {
-      this.shell.executeCommand(trimmedInput);
-    } else {
-      this.shell.outputToTerminal('', { newline: true });
-    }
-
+    this.callbacks.onCommandExecute?.(trimmedInput);
     this.createInputLine();
   }
 
   private handleSpace() {
-    if (!this.shell) return;
-
     this.setInput(this.input + ' ');
   }
 
-  private handleTab() {
-    if (!this.shell) return;
+  private handleCtrlL() {
+    this.callbacks.onRequestClear?.();
+  }
 
+  private handleCtrlU() {
+    this.createInputLine();
+  }
+
+  private handleCtrlW() {
+    const input = this.input;
+    const cursor = this.cursorSelectionStart_;
+
+    const beforeCursor = input.slice(0, cursor);
+    const afterCursor = input.slice(this.cursorSelectionEnd_);
+
+    // 커서 앞 마지막 단어 + 공백
+    const newBeforeCursor = beforeCursor.replace(/(\s*)\S+\s*$/, '');
+
+    const newCursor = newBeforeCursor.length;
+    const newInput = newBeforeCursor + afterCursor;
+
+    this.setInput(newInput);
+    this.setSelection(newCursor, newCursor);
+  }
+
+  private handleTab() {
     const trimmedInput = this.input.trim();
 
     if (!trimmedInput) {
@@ -238,7 +238,7 @@ export class InputLineEditor implements LineEditor {
     }
 
     if (!this.isAutoCompleteActive) {
-      const suggestions = this.shell.getAutocompleteSuggestions();
+      const suggestions = this.callbacks.onRequestAutoComplete?.() || [];
       this.suggestions = suggestions;
       this.isAutoCompleteActive = true;
       this.selectedSuggestionIndex = 0;
@@ -267,7 +267,7 @@ export class InputLineEditor implements LineEditor {
 
       this.cursorSelectionStart_ = this.cursorSelectionEnd_ = newBeforeCursor?.length || 0;
       this.setInput(newInput);
-      this.onSuggestionsChange?.(this.suggestions, this.selectedSuggestionIndex);
+      this.callbacks.onSuggestionsChange?.(this.suggestions, this.selectedSuggestionIndex);
     }
   }
 
@@ -275,52 +275,6 @@ export class InputLineEditor implements LineEditor {
     this.isAutoCompleteActive = false;
     this.selectedSuggestionIndex = -1;
     this.suggestions = [];
-    this.onSuggestionsChange?.([], this.selectedSuggestionIndex);
-  }
-
-  private handleCtrlL() {
-    if (!this.shell) return;
-
-    this.shell.clearOutput();
-  }
-
-  private handleCtrlU() {
-    if (!this.shell) return;
-
-    this.createInputLine();
-  }
-
-  private handleCtrlW() {
-    if (!this.shell) return;
-
-    const input = this.input;
-    const cursor = this.cursorSelectionStart_;
-
-    const beforeCursor = input.slice(0, cursor);
-    const afterCursor = input.slice(this.cursorSelectionEnd_);
-
-    // 커서 앞 마지막 단어 + 공백
-    const newBeforeCursor = beforeCursor.replace(/(\s*)\S+\s*$/, '');
-
-    const newCursor = newBeforeCursor.length;
-    const newInput = newBeforeCursor + afterCursor;
-
-    this.setInput(newInput);
-    this.setSelection(newCursor, newCursor);
-  }
-
-  handleTextInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const newInput = e.target.value;
-
-    /**
-     * @description 단축키로 커서 이동 시, Input과 LineEditor 사이 커서 위치가 동기화되지 않기 때문에
-     * 커서 위치 자동 업데이트 안 함
-     * */
-    this.setInput(newInput, false);
-
-    // input의 입력 이벤트로부터 선택 범위 manual 업데이트
-    if (e.target.selectionStart !== null && e.target.selectionEnd !== null) {
-      this.setSelection(e.target.selectionStart, e.target.selectionEnd);
-    }
+    this.callbacks.onSuggestionsChange?.([], this.selectedSuggestionIndex);
   }
 }
