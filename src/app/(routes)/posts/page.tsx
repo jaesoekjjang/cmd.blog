@@ -7,7 +7,7 @@ export default async function TerminalPage() {
   const fileSystem = await generateFileSystem();
 
   return (
-    <main className="flex flex-col row-start-2 justify-center items-center w-full mx-auto px-12">
+    <main className="row-start-2 mx-auto flex w-full flex-col items-center justify-center px-12">
       <Terminal fileSystem={fileSystem} />
     </main>
   );

@@ -15,7 +15,7 @@ export function TerminalInput({ ref, value, onChange, onSelect, onKeyDown, promp
     <div>
       <div className="flex items-center justify-between">
         <div className="text-terminal-prompt-directory font-semibold">{prompt.directory}</div>
-        <time className="text-[13px] text-terminal-prompt-time mt-1" suppressHydrationWarning>
+        <time className="text-terminal-prompt-time mt-1 text-[13px]" suppressHydrationWarning>
           {prompt.date}
         </time>
       </div>
@@ -23,7 +23,7 @@ export function TerminalInput({ ref, value, onChange, onSelect, onKeyDown, promp
         <span className="text-terminal-prompt-prefix font-semibold">{prompt.prefix}</span>
         <input
           ref={ref}
-          className="flex-1 pl-1 bg-transparent border-none focus:outline-none dark:text-[var(--color-text-dark)] dark:caret-white light:text-[var(--color-text)] light:caret-[var(--color-text)]"
+          className="light:text-[var(--color-text)] light:caret-[var(--color-text)] flex-1 border-none bg-transparent pl-1 focus:outline-none dark:text-[var(--color-text-dark)] dark:caret-white"
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}

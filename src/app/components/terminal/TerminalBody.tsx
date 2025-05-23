@@ -34,7 +34,7 @@ export function TerminalBody({ fileSystem, commands, resizeState }: TerminalBody
   }, [outputs, autoComplete]);
 
   return (
-    <div className="flex-auto py-1 px-2 scrollbar relative" ref={outputContainerRef} onClick={focus}>
+    <div className="scrollbar relative flex-auto px-2 py-1" ref={outputContainerRef} onClick={focus}>
       <TerminalOutput output={outputs} />
       <TerminalInput
         ref={inputRef}

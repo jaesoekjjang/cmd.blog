@@ -239,4 +239,3 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     style,
   };
 };
-

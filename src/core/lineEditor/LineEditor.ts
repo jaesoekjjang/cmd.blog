@@ -17,7 +17,7 @@ export abstract class LineEditor {
   abstract setInput(input: string): void;
   abstract addOutput(options: OutputOptions): void;
   abstract getSuggestions(): string[];
-  /* eslint-disable-next-line */
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   abstract handleKeyDown(...args: any[]): void;
 
   constructor(callbacks: LineEditorCallbacks) {

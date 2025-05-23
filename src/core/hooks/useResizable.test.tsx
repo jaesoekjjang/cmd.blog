@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { act, renderHook } from '@testing-library/react';
 import { useResizable } from './useResizable';
 
@@ -102,4 +105,3 @@ describe('useResizable', () => {
     expect(result.current.state.height).toBe(600);
   });
 });
-
