@@ -1,7 +1,9 @@
+import { RenderedOutput } from '../filesystem/vFileSystem';
+
 export interface OutputOptions {
   output: React.ReactNode;
   style?: TextStyle;
-  type?: 'text' | 'react';
+  type?: RenderedOutput['kind'];
 }
 
 export interface TextStyle {
@@ -14,7 +16,7 @@ export interface TextStyle {
 
 export interface OutputItem {
   id: number;
-  output: React.ReactNode;
+  output: string;
   style?: TextStyle;
-  type?: 'text' | 'react';
+  type?: RenderedOutput['kind'];
 }

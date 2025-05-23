@@ -14,8 +14,10 @@ export interface FileNode extends FSNode {
   type: 'file';
   text: string;
   extension: string;
-  renderedContent?: string;
+  rendered: RenderedOutput;
 }
+
+export type RenderedOutput = { kind: 'html'; content: string } | { kind: 'text'; content: string };
 
 export interface DirectoryNode extends FSNode {
   type: 'directory';

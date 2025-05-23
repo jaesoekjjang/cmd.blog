@@ -1,8 +1,9 @@
-import { FileNode, getAbsolutePath, isDirectory, isFileNode, isValidPath } from '@/core/filesystem';
+import { getAbsolutePath, isDirectory, isFileNode, isValidPath } from '@/core/filesystem';
 import { Shell } from '@/core/shell';
 import path, { normalize, resolve } from 'path';
+import { RenderedOutput } from '../filesystem/vFileSystem';
 
-export type CommandType = 'ls' | 'cd' | 'cat' | 'clear' | 'pwd' | 'history' | 'help' | (string & {});
+export type CommandType = 'ls' | 'cd' | 'cat' | 'clear' | 'pwd' | 'history' | (string & {});
 
 export interface Command {
   name: CommandType;
@@ -10,10 +11,10 @@ export interface Command {
   execute: (args: string[], shell: Shell) => CommandResult | void;
 }
 
-export type CommandResult =
-  | { type: 'text'; content: string }
-  | { type: 'file'; node: FileNode }
-  | { type: 'error'; message: string };
+export type CommandResult = {
+  type: RenderedOutput['kind'];
+  content: string;
+};
 
 export const commands: Command[] = [
   {
@@ -24,11 +25,11 @@ export const commands: Command[] = [
       const fileSystem = shell.getFileSystem();
 
       if (!isValidPath(fileSystem, currentDirectory)) {
-        return { type: 'error', message: '존재하지 않는 경로입니다.' };
+        return { type: 'text', content: '존재하지 않는 경로입니다.' };
       }
 
       if (!isDirectory(fileSystem, currentDirectory)) {
-        return { type: 'error', message: '디렉터리 경로가 아닙니다.' };
+        return { type: 'text', content: '디렉터리 경로가 아닙니다.' };
       }
 
       const currentNode = fileSystem.nodes[currentDirectory];
@@ -55,7 +56,7 @@ export const commands: Command[] = [
     execute: (args, shell) => {
       const directory = resolve(args[args.length - 1] || './');
       if (!directory) {
-        return { type: 'error', message: '디렉터리 경로를 입력하세요.' };
+        return { type: 'text', content: '디렉터리 경로를 입력하세요.' };
       }
 
       const currentDirectory = shell.getCurrentDirectory();
@@ -71,7 +72,7 @@ export const commands: Command[] = [
         case '-': {
           const previousDirectory = shell.getFileHistory().slice(-1)[0];
           if (!previousDirectory) {
-            return { type: 'error', message: '이전 디렉터리가 없습니다.' };
+            return { type: 'text', content: '이전 디렉터리가 없습니다.' };
           }
           shell.changeDirectory(previousDirectory);
           break;
@@ -82,8 +83,8 @@ export const commands: Command[] = [
 
           if (!isValidPath(fileSystem, normalize(path)) || !isDirectory(fileSystem, path)) {
             return {
-              type: 'error',
-              message: `${directory}: 존재하지 않는 경로입니다.`,
+              type: 'text',
+              content: `${directory}: 존재하지 않는 경로입니다.`,
             };
           }
 
@@ -106,7 +107,7 @@ export const commands: Command[] = [
     execute: (args: string[], shell) => {
       const file = args[0];
       if (!file) {
-        return { type: 'error', message: '파일 경로를 입력하세요.' };
+        return { type: 'text', content: '파일 경로를 입력하세요.' };
       }
 
       const fileSystem = shell.getFileSystem();
@@ -114,17 +115,20 @@ export const commands: Command[] = [
 
       if (!isValidPath(fileSystem, filePath)) {
         return {
-          type: 'error',
-          message: `${file}: 존재하지 않는 파일 또는 경로입니다.`,
+          type: 'text',
+          content: `${file}: 존재하지 않는 파일 또는 경로입니다.`,
         };
       }
 
       const node = fileSystem.nodes[filePath];
       if (!node || !isFileNode(node)) {
-        return { type: 'error', message: `'${file}'은 파일이 아닙니다.` };
+        return { type: 'text', content: `'${file}'은 파일이 아닙니다.` };
       }
 
-      return { type: 'file', node };
+      return {
+        type: node.rendered.kind,
+        content: node.rendered.content,
+      };
     },
   },
   {
@@ -146,16 +150,6 @@ export const commands: Command[] = [
       return {
         type: 'text',
         content: history.map((command, index) => `${index + 1} ${command}`).join('\n'),
-      };
-    },
-  },
-  {
-    name: 'help',
-    description: 'Display help information',
-    execute: () => {
-      return {
-        type: 'text',
-        content: commands.map(command => `${command.name}: ${command.description}`).join('\n'),
       };
     },
   },

@@ -4,16 +4,16 @@ import { HistoryManager } from '@/core//history';
 import { Command, type CommandResult } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { LineEditor, type LineEditorCallbacks, type TextStyle } from '@/core/lineEditor';
-import { renderFileNode } from '@/core/renderer/fileNodeRenderer';
 import tinydate from 'tinydate';
+import { RenderedOutput } from '../filesystem/vFileSystem';
 import { PromptState, ShellOptions } from './types';
+
+const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
 
 const defaultShellOptions: ShellOptions = {
   dateFormat: '🕔 {HH}:{mm}:{ss}',
   promptPrefix: '>',
 };
-
-const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
 
 export class Shell {
   private fileSystem: FileSystem;
@@ -109,7 +109,7 @@ export class Shell {
     this.updateShellState();
   }
 
-  outputToTerminal(output: React.ReactNode, opts?: { newline?: boolean; style?: TextStyle; type?: 'text' | 'react' }) {
+  outputToTerminal(output: string, opts?: { newline?: boolean; style?: TextStyle; type?: RenderedOutput['kind'] }) {
     const { newline = false, style, type } = opts || {};
 
     this.lineEditor.addOutput({ output, style, type });
@@ -145,8 +145,8 @@ export class Shell {
 
     if (!command) {
       output = {
-        type: 'error',
-        message: `${cmd}: 존재하지 않는 명령입니다.`,
+        type: 'text',
+        content: `${cmd}: 존재하지 않는 명령입니다.`,
       };
     } else {
       output = command.execute(args, this);
@@ -159,14 +159,9 @@ export class Shell {
         return this.outputToTerminal(output.content, {
           newline: true,
         });
-      case 'file':
-        const renderedFile = renderFileNode(output.node);
-        return this.outputToTerminal(renderedFile, {
-          type: 'react',
-          newline: true,
-        });
-      case 'error':
-        return this.outputToTerminal(output.message, {
+      case 'html':
+        return this.outputToTerminal(output.content, {
+          type: 'html',
           newline: true,
         });
     }
@@ -229,4 +224,3 @@ export class Shell {
     return this.completionProvider.complete(this.lineEditor, this);
   }
 }
-
