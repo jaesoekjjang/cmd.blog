@@ -6,11 +6,11 @@ interface TerminalResizeOverlayProps {
 
 export function TerminalResizeOverlay({ state }: TerminalResizeOverlayProps) {
   return (
-    <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center">
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
       {state?.isDragging && (
-        <span className="ml-2 text-xs opacity-50">
+        <div className="bg-black/50 text-white rounded px-2 py-1 text-sm font-mono">
           {state.width}×{state.height}
-        </span>
+        </div>
       )}
     </div>
   );

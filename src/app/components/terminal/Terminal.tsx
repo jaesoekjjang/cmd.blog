@@ -26,7 +26,7 @@ export function Terminal({ fileSystem }: TerminalProps) {
       className={clsx(
         'bg-terminal-bg border-terminal-border flex flex-col overflow-hidden rounded-lg border shadow-lg',
         {
-          'transition-[width,height]': !state.isDragging,
+          '!transition-all': !state.isDragging,
         },
       )}
     >
