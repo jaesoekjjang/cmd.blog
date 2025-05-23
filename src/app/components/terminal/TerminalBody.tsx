@@ -1,17 +1,20 @@
 import { Command } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
+import { ResizableState } from '@/core/hooks/useResizable';
 import { useShell } from '@/core/shell/useShell';
 import { useEffect, useRef } from 'react';
 import { TerminalAutoComplete } from './TerminalAutoComplete';
 import { TerminalInput } from './TerminalInput';
 import { TerminalOutput } from './TerminalOutput';
+import { TerminalResizeOverlay } from './TerminalResizeOverlay';
 
 interface TerminalBodyProps {
   fileSystem: FileSystem;
   commands: Command[];
+  resizeState: ResizableState;
 }
 
-export function TerminalBody({ fileSystem, commands }: TerminalBodyProps) {
+export function TerminalBody({ fileSystem, commands, resizeState }: TerminalBodyProps) {
   const { input, outputs, autoComplete, inputRef, handleKeyDown, handleTextInput, handleSelect, shell, focus } =
     useShell({
       fileSystem,
@@ -31,7 +34,7 @@ export function TerminalBody({ fileSystem, commands }: TerminalBodyProps) {
   }, [outputs, autoComplete]);
 
   return (
-    <div className="flex-auto py-1 px-2 scrollbar" ref={outputContainerRef} onClick={focus}>
+    <div className="flex-auto py-1 px-2 scrollbar relative" ref={outputContainerRef} onClick={focus}>
       <TerminalOutput output={outputs} />
       <TerminalInput
         ref={inputRef}
@@ -42,6 +45,7 @@ export function TerminalBody({ fileSystem, commands }: TerminalBodyProps) {
         prompt={shell.promptState}
       />
       <TerminalAutoComplete autoComplete={autoComplete} />
+      <TerminalResizeOverlay state={resizeState} />
     </div>
   );
 }
