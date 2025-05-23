@@ -15,8 +15,6 @@ export function TerminalResizeOverlay({ state }: TerminalResizeOverlayProps) {
       {state?.isDragging && (
         <span className="ml-2 text-xs opacity-50">
           {state.width}×{state.height}
-          {state.isMaximized && ' (Max)'}
-          {state.isMinimized && ' (Min)'}
         </span>
       )}
     </div>

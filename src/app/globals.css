@@ -96,6 +96,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
+* {
+  @apply transition-colors duration-300 ease-in-out;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

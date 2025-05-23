@@ -11,6 +11,7 @@
     "test:unit": "jest --passWithNoTests"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "html-react-parser": "^5.2.3",
     "marked": "^15.0.11",
     "next": "15.3.0",
@@ -24,6 +25,7 @@
     "@playwright/test": "^1.52.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^29.5.14",
@@ -36,6 +38,8 @@
     "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.5.3",
     "prettier-plugin-organize-imports": "^4.1.0",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "react-test-renderer": "^19.1.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.3.4",
     "ts-node": "^10.9.2",

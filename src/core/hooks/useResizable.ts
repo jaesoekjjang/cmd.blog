@@ -5,8 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export interface ResizableState {
   width: number;
   height: number;
-  isMaximized: boolean;
-  isMinimized: boolean;
   isDragging: boolean;
 }
 
@@ -52,8 +50,6 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
   const [state, setState] = useState<ResizableState>({
     width: initialWidth,
     height: initialHeight,
-    isMaximized: false,
-    isMinimized: false,
     isDragging: false,
   });
 
@@ -174,6 +170,7 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
         ...prev,
         isDragging: true,
       }));
+
       dragDataRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -189,30 +186,22 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
   );
 
   const maximize = useCallback(() => {
-    if (!state.isMaximized) {
-      previousSizeRef.current = { width: state.width, height: state.height };
-      setState(prev => ({
-        ...prev,
-        width: maxWidth,
-        height: maxHeight,
-        isMaximized: true,
-        isMinimized: false,
-      }));
-    }
-  }, [state.isMaximized, state.width, state.height, maxWidth, maxHeight]);
+    previousSizeRef.current = { width: state.width, height: state.height };
+    setState(prev => ({
+      ...prev,
+      width: maxWidth,
+      height: maxHeight,
+    }));
+  }, [state.width, state.height, maxWidth, maxHeight]);
 
   const minimize = useCallback(() => {
-    if (!state.isMinimized) {
-      previousSizeRef.current = { width: state.width, height: state.height };
-      setState(prev => ({
-        ...prev,
-        width: minWidth,
-        height: minHeight,
-        isMinimized: true,
-        isMaximized: false,
-      }));
-    }
-  }, [state.isMinimized, state.width, state.height, minWidth, minHeight]);
+    previousSizeRef.current = { width: state.width, height: state.height };
+    setState(prev => ({
+      ...prev,
+      width: minWidth,
+      height: minHeight,
+    }));
+  }, [state.width, state.height, minWidth, minHeight]);
 
   const setSize = useCallback(
     (width: number, height: number) => {
