@@ -1,4 +1,4 @@
-import { Command } from '@/core/commands';
+import { CommandRegistry } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { ResizableState } from '@/core/hooks/useResizable';
 import { useShell } from '@/core/shell/useShell';
@@ -10,15 +10,15 @@ import { TerminalResizeOverlay } from './TerminalResizeOverlay';
 
 interface TerminalBodyProps {
   fileSystem: FileSystem;
-  commands: Command[];
+  commandRegistry: CommandRegistry;
   resizeState: ResizableState;
 }
 
-export function TerminalBody({ fileSystem, commands, resizeState }: TerminalBodyProps) {
+export function TerminalBody({ fileSystem, commandRegistry, resizeState }: TerminalBodyProps) {
   const { input, outputs, autoComplete, inputRef, handleKeyDown, handleTextInput, handleSelect, shell, focus } =
     useShell({
       fileSystem,
-      commands,
+      commandRegistry,
     });
 
   const outputContainerRef = useRef<HTMLDivElement>(null);

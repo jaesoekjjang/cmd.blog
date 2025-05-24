@@ -113,7 +113,6 @@ export class CompletionProvider {
   }
 
   private completeCommand(currentArg: string, shell: Shell): string[] {
-    const commands = shell.getCommands().map(cmd => cmd.name);
-    return commands.filter(command => command.startsWith(currentArg));
+    return shell.getCommands().filter(command => command.startsWith(currentArg));
   }
 }

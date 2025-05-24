@@ -1,4 +1,4 @@
-import { Command } from '@/core/commands';
+import { CommandRegistry } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
 import { OutputItem } from '@/core/lineEditor';
@@ -9,11 +9,11 @@ import { Shell } from './Shell';
 import { AutoComplete } from './types';
 
 interface useLineEditorProps {
-  commands: Command[];
+  commandRegistry: CommandRegistry;
   fileSystem: FileSystem;
 }
 
-export function useShell({ commands, fileSystem }: useLineEditorProps) {
+export function useShell({ commandRegistry, fileSystem }: useLineEditorProps) {
   const [input, setInput] = useState('');
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
   const [autoComplete, setAutoComplete] = useState<AutoComplete>({
@@ -43,7 +43,7 @@ export function useShell({ commands, fileSystem }: useLineEditorProps) {
     const commandHistoryManager = new CommandHistoryManager();
     const completionProvider = new CompletionProvider();
     const shell = new Shell({
-      commands,
+      commandRegistry,
       fileSystem,
       lineEditor,
       commandHistoryManager,

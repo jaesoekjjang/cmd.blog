@@ -16,6 +16,7 @@ export const keyMappings = [
       { key: 'pwd', description: '현재 디렉토리 표시' },
       { key: 'clear', description: '터미널 출력 지우기' },
       { key: 'history', description: '명령어 기록 표시' },
+      { key: '/?', description: '도움말 표시' },
     ],
   },
   {

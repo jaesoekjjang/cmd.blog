@@ -19,7 +19,7 @@ export function HelpModal({ onClose }: HelpModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45">
       <div
-        className="bg-terminal-bg border-terminal-border max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg border p-6 shadow-xl"
+        className="bg-terminal-bg border-terminal-border focus:ring-terminal-button max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg border p-6 shadow-xl focus:ring-2 focus:outline-none"
         ref={ref}
         tabIndex={0}
       >
@@ -27,7 +27,7 @@ export function HelpModal({ onClose }: HelpModalProps) {
           <h2 className="text-terminal-text text-2xl font-bold">Help</h2>
           <button
             onClick={onClose}
-            className="text-terminal-text rouned-md border-terminal-button rounded-md border px-1.5 py-1 text-xs"
+            className="text-terminal-text rouned-md border-terminal-button rounded-md border px-1.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-terminal-button"
           >
             <kbd>esc</kbd>
           </button>

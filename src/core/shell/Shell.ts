@@ -1,7 +1,7 @@
 import { getThemeTokenResolver } from '@/app/theme';
 import { CompletionProvider } from '@/core//completionProvider';
 import { HistoryManager } from '@/core//history';
-import { Command, type CommandResult } from '@/core/commands';
+import { CommandRegistry, type CommandResult } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { LineEditor, type LineEditorCallbacks, type TextStyle } from '@/core/lineEditor';
 import tinydate from 'tinydate';
@@ -21,7 +21,7 @@ export class Shell {
   private currentDirectory: string;
   private fileHistory: string[];
 
-  private commands: Command[];
+  private commandRegistry: CommandRegistry;
   private commandHistoryManager: HistoryManager;
 
   private completionProvider: CompletionProvider;
@@ -30,21 +30,21 @@ export class Shell {
   private promptState_: PromptState;
 
   constructor({
-    commands,
+    commandRegistry,
     fileSystem,
     lineEditor,
     commandHistoryManager,
     completionProvider,
     opts,
   }: {
-    commands: Command[];
+    commandRegistry: CommandRegistry;
     fileSystem: FileSystem;
     lineEditor: LineEditor;
     commandHistoryManager: HistoryManager;
     completionProvider: CompletionProvider;
     opts?: Partial<ShellOptions>;
   }) {
-    this.commands = commands;
+    this.commandRegistry = commandRegistry;
     this.fileSystem = fileSystem;
     this.lineEditor = lineEditor;
     this.currentDirectory = '/';
@@ -123,7 +123,7 @@ export class Shell {
   }
 
   getCommands() {
-    return [...this.commands];
+    return this.commandRegistry.getNames();
   }
 
   executeCommand(commandStr: string) {
@@ -139,7 +139,7 @@ export class Shell {
 
     const [cmd, ...args] = commandStr.split(' ');
 
-    const command = this.commands.find(c => c.name === cmd);
+    const command = cmd ? this.commandRegistry.get(cmd) : undefined;
 
     let output: CommandResult | void;
 
