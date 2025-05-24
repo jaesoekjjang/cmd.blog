@@ -53,7 +53,6 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     isDragging: false,
   });
 
-  const previousSizeRef = useRef({ width: initialWidth, height: initialHeight });
   const dragDataRef = useRef<{
     startX: number;
     startY: number;
@@ -131,7 +130,6 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
       isDragging: false,
     }));
     dragDataRef.current = null;
-    document.body.style.cursor = '';
   }, []);
 
   useEffect(() => {
@@ -157,9 +155,6 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
         startHeight: state.height,
         direction,
       };
-
-      const cursor = direction === 'n' || direction === 's' ? 'ns-resize' : 'ew-resize';
-      document.body.style.cursor = cursor;
     },
     [state.width, state.height],
   );
@@ -178,30 +173,25 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
         startHeight: state.height,
         direction,
       };
-
-      const cursor = direction === 'ne' || direction === 'sw' ? 'nesw-resize' : 'nwse-resize';
-      document.body.style.cursor = cursor;
     },
     [state.width, state.height],
   );
 
   const maximize = useCallback(() => {
-    previousSizeRef.current = { width: state.width, height: state.height };
     setState(prev => ({
       ...prev,
       width: maxWidth,
       height: maxHeight,
     }));
-  }, [state.width, state.height, maxWidth, maxHeight]);
+  }, [maxWidth, maxHeight]);
 
   const minimize = useCallback(() => {
-    previousSizeRef.current = { width: state.width, height: state.height };
     setState(prev => ({
       ...prev,
       width: minWidth,
       height: minHeight,
     }));
-  }, [state.width, state.height, minWidth, minHeight]);
+  }, [minWidth, minHeight]);
 
   const setSize = useCallback(
     (width: number, height: number) => {
