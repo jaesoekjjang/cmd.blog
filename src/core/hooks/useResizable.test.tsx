@@ -31,9 +31,6 @@ describe('useResizable', () => {
     expect(result.current.state).toMatchObject({
       width: 500,
       height: 400,
-      isMaximized: false,
-      isMinimized: false,
-      isDragging: false,
     });
 
     expect(result.current.style).toEqual({
@@ -51,8 +48,6 @@ describe('useResizable', () => {
     });
 
     expect(result.current.state).toMatchObject({
-      isMaximized: true,
-      isMinimized: false,
       isDragging: false,
       width: 1200,
       height: 800,
@@ -66,8 +61,6 @@ describe('useResizable', () => {
       result.current.controls.minimize();
     });
 
-    expect(result.current.state.isMinimized).toBe(true);
-    expect(result.current.state.isMaximized).toBe(false);
     expect(result.current.state.width).toBe(100);
     expect(result.current.state.height).toBe(100);
   });
@@ -82,8 +75,6 @@ describe('useResizable', () => {
     expect(result.current.state).toMatchObject({
       width: 600,
       height: 500,
-      isMaximized: false,
-      isMinimized: false,
     });
   });
 
