@@ -18,7 +18,7 @@ export const TerminalHeader = forwardRef<HTMLDivElement, TerminalHeaderProps>(fu
     <div
       ref={ref}
       className="bg-terminal-header border-terminal-border flex items-center border-b px-4 py-2"
-      onDoubleClick={controls?.maximize}
+      onDoubleClick={controls?.toggleMaximize}
     >
       <div className="flex space-x-2">
         <button className="h-3 w-3 rounded-full bg-red-500 transition-colors hover:bg-red-600" />

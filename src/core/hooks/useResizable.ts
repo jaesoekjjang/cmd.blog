@@ -6,6 +6,8 @@ export interface ResizableState {
   width: number;
   height: number;
   isDragging: boolean;
+  isMaximized: boolean;
+  isMinimized: boolean;
 }
 
 export interface UseResizableOptions {
@@ -33,6 +35,7 @@ export interface UseResizableReturn {
   controls: {
     maximize: () => void;
     minimize: () => void;
+    toggleMaximize: () => void;
     setSize: (width: number, height: number) => void;
   };
   style: React.CSSProperties;
@@ -49,10 +52,22 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     onResize,
   } = options;
 
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 2560,
+    height: typeof window !== 'undefined' ? window.innerHeight : 1440,
+  });
+
   const [state, setState] = useState<ResizableState>({
     width: initialWidth,
     height: initialHeight,
     isDragging: false,
+    isMaximized: false,
+    isMinimized: false,
+  });
+
+  const previousSizeRef = useRef<{ width: number; height: number }>({
+    width: initialWidth,
+    height: initialHeight,
   });
 
   const dragDataRef = useRef<{
@@ -109,6 +124,8 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
 
   const onMouseDownBorder = useCallback(
     (direction: 'n' | 's' | 'e' | 'w') => (e: React.MouseEvent) => {
+      if (state.isMaximized) return;
+      
       setState(prev => ({
         ...prev,
         isDragging: true,
@@ -121,11 +138,13 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
         direction,
       };
     },
-    [state.width, state.height],
+    [state.width, state.height, state.isMaximized],
   );
 
   const onMouseDownCorner = useCallback(
     (direction: 'ne' | 'nw' | 'se' | 'sw') => (e: React.MouseEvent) => {
+      if (state.isMaximized) return;
+      
       setState(prev => ({
         ...prev,
         isDragging: true,
@@ -139,13 +158,17 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
         direction,
       };
     },
-    [state.width, state.height],
+    [state.width, state.height, state.isMaximized],
   );
 
   const setSize = useCallback(
-    (width: number, height: number) => {
+    (width: number, height: number, updatePreviousSize = true) => {
       const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, width));
       const constrainedHeight = Math.max(minHeight, Math.min(maxHeight, height));
+
+      if (updatePreviousSize && !state.isMaximized && !state.isMinimized) {
+        previousSizeRef.current = { width: state.width, height: state.height };
+      }
 
       setState(prev => ({
         ...prev,
@@ -157,7 +180,17 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
 
       onResize?.(constrainedWidth, constrainedHeight);
     },
-    [minWidth, maxWidth, minHeight, maxHeight, onResize],
+    [
+      minWidth,
+      maxWidth,
+      minHeight,
+      maxHeight,
+      onResize,
+      state.width,
+      state.height,
+      state.isMaximized,
+      state.isMinimized,
+    ],
   );
 
   const handleMouseMove = useCallback(
@@ -170,18 +203,56 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
 
       const { width, height } = calculateNewSize(deltaX, deltaY, direction, startWidth, startHeight);
 
-      setSize(width, height);
+      setSize(width, height, false);
     },
     [calculateNewSize, setSize],
   );
 
   const maximize = useCallback(() => {
-    setSize(maxWidth, maxHeight);
-  }, [setSize, maxWidth, maxHeight]);
+    if (!state.isMaximized) {
+      previousSizeRef.current = { width: state.width, height: state.height };
+    }
+    const currentMaxWidth = windowSize.width;
+    const currentMaxHeight = windowSize.height;
+    setState(prev => ({
+      ...prev,
+      width: currentMaxWidth,
+      height: currentMaxHeight,
+      isMaximized: true,
+      isMinimized: false,
+    }));
+    onResize?.(currentMaxWidth, currentMaxHeight);
+  }, [windowSize.width, windowSize.height, state.width, state.height, state.isMaximized, onResize]);
 
   const minimize = useCallback(() => {
-    setSize(minWidth, minHeight);
-  }, [setSize, minWidth, minHeight]);
+    if (!state.isMinimized) {
+      previousSizeRef.current = { width: state.width, height: state.height };
+    }
+    setState(prev => ({
+      ...prev,
+      width: minWidth,
+      height: minHeight,
+      isMaximized: false,
+      isMinimized: true,
+    }));
+    onResize?.(minWidth, minHeight);
+  }, [minWidth, minHeight, state.width, state.height, state.isMinimized, onResize]);
+
+  const toggleMaximize = useCallback(() => {
+    if (state.isMaximized) {
+      const { width, height } = previousSizeRef.current;
+      setState(prev => ({
+        ...prev,
+        width,
+        height,
+        isMaximized: false,
+        isMinimized: false,
+      }));
+      onResize?.(width, height);
+    } else {
+      maximize();
+    }
+  }, [state.isMaximized, maximize, onResize]);
 
   const handleMouseUp = useCallback(() => {
     setState(prev => ({
@@ -192,14 +263,33 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
   }, []);
 
   useEffect(() => {
+    const handleWindowResize = () => {
+      const newWindowSize = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+      setWindowSize(newWindowSize);
+
+      if (state.isMaximized) {
+        setState(prev => ({
+          ...prev,
+          width: newWindowSize.width,
+          height: newWindowSize.height,
+        }));
+        onResize?.(newWindowSize.width, newWindowSize.height);
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      window.removeEventListener('resize', handleWindowResize);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp, state.isMaximized, onResize]);
 
   const style: React.CSSProperties = {
     width: state.width,
@@ -216,6 +306,7 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     controls: {
       maximize,
       minimize,
+      toggleMaximize,
       setSize,
     },
     style,
