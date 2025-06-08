@@ -2,16 +2,24 @@
 
 import { useTheme } from '@/app/theme';
 import { UseResizableReturn } from '@/core/hooks/useResizable';
+import { forwardRef } from 'react';
 
 interface TerminalHeaderProps {
   controls?: UseResizableReturn['controls'];
 }
 
-export function TerminalHeader({ controls }: TerminalHeaderProps) {
+export const TerminalHeader = forwardRef<HTMLDivElement, TerminalHeaderProps>(function TerminalHeader(
+  { controls },
+  ref,
+) {
   const [theme, toggleTheme] = useTheme();
 
   return (
-    <div className="bg-terminal-header border-terminal-border flex items-center border-b px-4 py-2">
+    <div
+      ref={ref}
+      className="bg-terminal-header border-terminal-border flex items-center border-b px-4 py-2"
+      onDoubleClick={controls?.maximize}
+    >
       <div className="flex space-x-2">
         <button className="h-3 w-3 rounded-full bg-red-500 transition-colors hover:bg-red-600" />
         <button
@@ -34,4 +42,4 @@ export function TerminalHeader({ controls }: TerminalHeaderProps) {
       </button>
     </div>
   );
-}
+});
