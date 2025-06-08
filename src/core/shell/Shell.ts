@@ -2,10 +2,13 @@ import { getThemeTokenResolver } from '@/app/theme';
 import { CompletionProvider } from '@/core//completionProvider';
 import { HistoryManager } from '@/core//history';
 import { CommandRegistry, type CommandResult } from '@/core/commands';
+import { CommandExecutor } from '@/core/commands/CommandExecutor';
+import { DefaultCommandPolicyProvider } from '@/core/commands/CommandPolicy';
 import { FileSystem } from '@/core/filesystem';
 import { LineEditor, type LineEditorCallbacks, type TextStyle } from '@/core/lineEditor';
 import tinydate from 'tinydate';
 import { RenderedOutput } from '../filesystem/vFileSystem';
+import { TerminalSession } from '../terminalSession/TerminalSession';
 import { PromptState, ShellOptions } from './types';
 
 const { terminalPromptCommand, terminalPromptPrefix } = getThemeTokenResolver();
@@ -23,11 +26,13 @@ export class Shell {
 
   private commandRegistry: CommandRegistry;
   private commandHistoryManager: HistoryManager;
+  private commandExecutor: CommandExecutor;
 
   private completionProvider: CompletionProvider;
 
   private opts: ShellOptions;
   private promptState_: PromptState;
+  private terminalSession: TerminalSession;
 
   constructor({
     commandRegistry,
@@ -35,6 +40,7 @@ export class Shell {
     lineEditor,
     commandHistoryManager,
     completionProvider,
+    terminalSession,
     opts,
   }: {
     commandRegistry: CommandRegistry;
@@ -42,6 +48,7 @@ export class Shell {
     lineEditor: LineEditor;
     commandHistoryManager: HistoryManager;
     completionProvider: CompletionProvider;
+    terminalSession: TerminalSession;
     opts?: Partial<ShellOptions>;
   }) {
     this.commandRegistry = commandRegistry;
@@ -51,6 +58,10 @@ export class Shell {
     this.fileHistory = [];
     this.commandHistoryManager = commandHistoryManager;
     this.completionProvider = completionProvider;
+    this.terminalSession = terminalSession;
+
+    const policyProvider = new DefaultCommandPolicyProvider();
+    this.commandExecutor = new CommandExecutor(policyProvider);
 
     this.opts = {
       ...defaultShellOptions,
@@ -126,7 +137,7 @@ export class Shell {
     return this.commandRegistry.getNames();
   }
 
-  executeCommand(commandStr: string) {
+  async executeCommand(commandStr: string) {
     this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
       style: { foreground: terminalPromptPrefix(), bold: true },
       newline: false,
@@ -149,12 +160,14 @@ export class Shell {
         content: `${cmd}: 존재하지 않는 명령입니다.`,
       };
     } else {
-      output = command.execute(args, this);
+      output = await this.commandExecutor.eval(command, args, this, this.terminalSession);
     }
 
     this.commandHistoryManager.push(commandStr);
 
-    switch (output?.type) {
+    if (!output) return;
+
+    switch (output.type) {
       case 'text':
         return this.outputToTerminal(output.content, {
           newline: true,
@@ -222,5 +235,9 @@ export class Shell {
 
   getAutocompleteSuggestions() {
     return this.completionProvider.complete(this.lineEditor, this);
+  }
+
+  getTerminalSession() {
+    return this.terminalSession;
   }
 }

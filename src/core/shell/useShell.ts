@@ -2,18 +2,23 @@ import { CommandRegistry } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
 import { OutputItem } from '@/core/lineEditor';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CompletionProvider } from '../completionProvider';
+import { UsePagerReturn } from '../hooks/usePager';
 import { InputLineEditor } from '../lineEditor/InputLineEditor';
+import { TerminalSession } from '../terminalSession/TerminalSession';
 import { Shell } from './Shell';
 import { AutoComplete } from './types';
 
 interface useLineEditorProps {
   commandRegistry: CommandRegistry;
   fileSystem: FileSystem;
+  terminalSession: TerminalSession;
+  paging: UsePagerReturn;
 }
 
-export function useShell({ commandRegistry, fileSystem }: useLineEditorProps) {
+export function useShell({ commandRegistry, fileSystem, terminalSession, paging }: useLineEditorProps) {
+  const [terminalMode, setTerminalMode] = useState(terminalSession.getCurrentMode());
   const [input, setInput] = useState('');
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
   const [autoComplete, setAutoComplete] = useState<AutoComplete>({
@@ -24,17 +29,22 @@ export function useShell({ commandRegistry, fileSystem }: useLineEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const outputIdRef = useRef(0);
 
+  const handleOutputChange = useCallback(
+    (newOutputs: OutputItem[]) => {
+      const updatedOutputs = newOutputs.map(output => ({
+        id: outputIdRef.current++,
+        ...output,
+      }));
+      setOutputs(updatedOutputs);
+    },
+    [setOutputs],
+  );
+
   const [lineEditor] = useState(
     () =>
       new InputLineEditor({
         onInputChange: setInput,
-        onOutputsChange: outputs => {
-          const newOutputs = outputs.map(output => ({
-            id: outputIdRef.current++,
-            ...output,
-          }));
-          setOutputs(newOutputs);
-        },
+        onOutputsChange: handleOutputChange,
         onSuggestionsChange: (suggestions, index) => setAutoComplete({ suggestions, index }),
       }),
   );
@@ -48,6 +58,7 @@ export function useShell({ commandRegistry, fileSystem }: useLineEditorProps) {
       lineEditor,
       commandHistoryManager,
       completionProvider,
+      terminalSession,
     });
 
     return shell;
@@ -90,8 +101,46 @@ export function useShell({ commandRegistry, fileSystem }: useLineEditorProps) {
     [lineEditor],
   );
 
+  const handleRawOutputRequested = useCallback(
+    ({ content, contentType, requiresPaging }: { content: string; contentType: string; requiresPaging: boolean }) => {
+      if (requiresPaging) {
+        paging.enable(content, contentType);
+        handleOutputChange([
+          {
+            id: outputIdRef.current++,
+            output: content,
+            type: contentType === 'markdown' ? 'html' : 'text',
+          },
+        ]);
+      } else {
+        terminalSession.addOutput({
+          output: content,
+          type: contentType === 'markdown' ? 'html' : 'text',
+        });
+      }
+    },
+    [paging, terminalSession],
+  );
+
+  useEffect(() => {
+    const handleModeChange = ({ mode }: { mode: any }) => {
+      setTerminalMode(mode);
+    };
+
+    terminalSession.on('modeChanged', handleModeChange);
+    terminalSession.on('rawOutputRequested', handleRawOutputRequested);
+    terminalSession.on('outputsChanged', handleOutputChange);
+
+    return () => {
+      terminalSession.off('modeChanged', handleModeChange);
+      terminalSession.off('rawOutputRequested', handleRawOutputRequested);
+      terminalSession.off('outputsChanged', handleOutputChange);
+    };
+  }, [handleOutputChange, handleRawOutputRequested, terminalSession]);
+
   return {
     shell,
+    terminalMode,
     input,
     outputs,
     inputRef,

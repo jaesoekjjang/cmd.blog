@@ -15,6 +15,7 @@ export interface UseResizableOptions {
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
+  onResize?: (width: number, height: number) => void;
 }
 
 export type Direction = BorderDirection | CornerDirection;
@@ -45,6 +46,7 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     minHeight = 100,
     maxHeight = typeof window !== 'undefined' ? window.innerHeight : 1440,
     maxWidth = typeof window !== 'undefined' ? window.innerWidth : 2560,
+    onResize,
   } = options;
 
   const [state, setState] = useState<ResizableState>({
@@ -105,43 +107,6 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     [minWidth, minHeight, maxWidth, maxHeight],
   );
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!dragDataRef.current) return;
-
-      const { startX, startY, startWidth, startHeight, direction } = dragDataRef.current;
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-
-      const { width, height } = calculateNewSize(deltaX, deltaY, direction, startWidth, startHeight);
-
-      setState(prev => ({
-        ...prev,
-        width,
-        height,
-      }));
-    },
-    [calculateNewSize],
-  );
-
-  const handleMouseUp = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      isDragging: false,
-    }));
-    dragDataRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleMouseMove, handleMouseUp]);
-
   const onMouseDownBorder = useCallback(
     (direction: 'n' | 's' | 'e' | 'w') => (e: React.MouseEvent) => {
       setState(prev => ({
@@ -177,22 +142,6 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
     [state.width, state.height],
   );
 
-  const maximize = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      width: maxWidth,
-      height: maxHeight,
-    }));
-  }, [maxWidth, maxHeight]);
-
-  const minimize = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      width: minWidth,
-      height: minHeight,
-    }));
-  }, [minWidth, minHeight]);
-
   const setSize = useCallback(
     (width: number, height: number) => {
       const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, width));
@@ -205,9 +154,52 @@ export const useResizable = (options: UseResizableOptions = {}): UseResizableRet
         isMaximized: false,
         isMinimized: false,
       }));
+
+      onResize?.(constrainedWidth, constrainedHeight);
     },
-    [minWidth, minHeight, maxWidth, maxHeight],
+    [minWidth, maxWidth, minHeight, maxHeight, onResize],
   );
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!dragDataRef.current) return;
+
+      const { startX, startY, startWidth, startHeight, direction } = dragDataRef.current;
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      const { width, height } = calculateNewSize(deltaX, deltaY, direction, startWidth, startHeight);
+
+      setSize(width, height);
+    },
+    [calculateNewSize, setSize],
+  );
+
+  const maximize = useCallback(() => {
+    setSize(maxWidth, maxHeight);
+  }, [setSize, maxWidth, maxHeight]);
+
+  const minimize = useCallback(() => {
+    setSize(minWidth, minHeight);
+  }, [setSize, minWidth, minHeight]);
+
+  const handleMouseUp = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      isDragging: false,
+    }));
+    dragDataRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
 
   const style: React.CSSProperties = {
     width: state.width,
