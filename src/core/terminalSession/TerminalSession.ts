@@ -26,9 +26,20 @@ export class TerminalSession {
     this.eventBus.emit('terminal:viewportChanged', { width, height });
   }
 
-  async setMode(mode: TerminalMode): Promise<void> {
+  async setMode(mode: TerminalMode, data?: { content: string; title?: string; contentType?: 'markdown' | 'text' }): Promise<void> {
     if (this.currentMode !== mode) {
       const previousMode = this.currentMode;
+      
+      if (mode === TerminalMode.RAW && data) {
+        this.eventBus.emit('output:preserveCanonical', undefined);
+        this.eventBus.emit('output:setRaw', {
+          content: data.content,
+          contentType: data.contentType ?? 'text'
+        });
+      } else if (previousMode === TerminalMode.RAW && mode === TerminalMode.CANONICAL) {
+        this.eventBus.emit('output:restoreCanonical', undefined);
+      }
+      
       this.currentMode = mode;
       this.eventBus.emit('terminal:modeChanged', { mode, previousMode });
     }

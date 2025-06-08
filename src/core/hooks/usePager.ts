@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DomPager } from '../pager/DomPager';
 import { ContentType, PagerState } from '../pager/types';
+import { EventBus, TerminalEvents } from '../eventBus';
 
 export interface UsePagerReturn<T extends HTMLElement> {
   isActive: boolean;
@@ -13,6 +14,7 @@ export interface UsePagerReturn<T extends HTMLElement> {
   updateViewport: (height: number) => void;
   exitPaging: () => void;
   enable: (content: string, contentType?: string) => void;
+  setEventBus: (eventBus: EventBus<TerminalEvents>) => void;
 
   contentRef: React.RefObject<T | null>;
   handleKeyDown: (event: KeyboardEvent) => boolean;
@@ -27,6 +29,7 @@ interface ExtendedPagerState extends PagerState {
 export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
   const [state, setState] = useState<PagerState | null>(null);
   const lastViewportHeightRef = useRef<number>(0);
+  const eventBusRef = useRef<EventBus<TerminalEvents> | null>(null);
 
   const pagerRef = useRef<DomPager | null>(null);
   const contentRef = useRef<T>(null);
@@ -106,6 +109,7 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
 
   const exitPaging = useCallback(() => {
     disposePager();
+    eventBusRef.current?.emit('paging:disabled', undefined);
   }, [disposePager]);
 
   const initializePaging = useCallback(
@@ -202,6 +206,10 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
     [updatePagerState],
   );
 
+  const setEventBus = useCallback((eventBus: EventBus<TerminalEvents>) => {
+    eventBusRef.current = eventBus;
+  }, []);
+
   return {
     progress: state?.progress || 0,
     isActive: state !== null,
@@ -216,5 +224,6 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
     enable,
     handleKeyDown,
     setContentElement,
+    setEventBus,
   };
 }

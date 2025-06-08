@@ -14,6 +14,4 @@ export interface OutputManger {
   addOutput(output: Omit<OutputItem, 'id'>): void;
   clearOutputs(): void;
   getOutputs(): OutputItem[];
-  on(event: 'outputsChanged', listener: (outputs: OutputItem[]) => void): void;
-  off(event: 'outputsChanged', listener: (outputs: OutputItem[]) => void): void;
 }

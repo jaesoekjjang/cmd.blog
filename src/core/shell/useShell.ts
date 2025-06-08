@@ -33,6 +33,7 @@ export function useShell<T extends HTMLElement>({ commandRegistry, fileSystem, p
   const [outputManager] = useState(() => new BaseOutputManager(eventBus));
   const [terminalSession] = useState(() => new TerminalSession(eventBus));
 
+
   const [shell] = useState(() => {
     const commandHistoryManager = new CommandHistoryManager();
     const shell = new Shell({
@@ -101,14 +102,9 @@ export function useShell<T extends HTMLElement>({ commandRegistry, fileSystem, p
     ({ content, contentType, requiresPaging }: { content: string; contentType: string; requiresPaging: boolean }) => {
       if (requiresPaging) {
         paging.enable(content, contentType);
-      } else {
-        outputManager.addOutput({
-          output: content,
-          type: contentType === 'markdown' ? 'html' : 'text',
-        });
       }
     },
-    [paging, outputManager],
+    [paging],
   );
 
   useEffect(() => {
@@ -120,16 +116,43 @@ export function useShell<T extends HTMLElement>({ commandRegistry, fileSystem, p
       setOutputs(outputs);
     };
 
+    const handlePreserveCanonical = () => {
+      outputManager.preserveCanonicalOutputs();
+    };
+
+    const handleSetRaw = (data: { content: string; contentType: 'markdown' | 'text' }) => {
+      outputManager.setRawOutput({
+        output: data.content,
+        type: data.contentType === 'markdown' ? 'html' : 'text'
+      });
+    };
+
+    const handleRestoreCanonical = () => {
+      outputManager.restoreCanonicalOutputs();
+    };
+
+    const handlePagingDisabled = () => {
+      terminalSession.exitRawMode();
+    };
+
     eventBus.on('terminal:modeChanged', handleModeChange);
     eventBus.on('terminal:rawOutputRequested', handleRawOutputRequested);
     eventBus.on('output:changed', handleOutputsChanged);
+    eventBus.on('output:preserveCanonical', handlePreserveCanonical);
+    eventBus.on('output:setRaw', handleSetRaw);
+    eventBus.on('output:restoreCanonical', handleRestoreCanonical);
+    eventBus.on('paging:disabled', handlePagingDisabled);
 
     return () => {
       eventBus.off('terminal:modeChanged', handleModeChange);
       eventBus.off('terminal:rawOutputRequested', handleRawOutputRequested);
       eventBus.off('output:changed', handleOutputsChanged);
+      eventBus.off('output:preserveCanonical', handlePreserveCanonical);
+      eventBus.off('output:setRaw', handleSetRaw);
+      eventBus.off('output:restoreCanonical', handleRestoreCanonical);
+      eventBus.off('paging:disabled', handlePagingDisabled);
     };
-  }, [handleRawOutputRequested, eventBus]);
+  }, [handleRawOutputRequested, eventBus, outputManager, terminalSession]);
 
   return {
     shell,
@@ -142,5 +165,6 @@ export function useShell<T extends HTMLElement>({ commandRegistry, fileSystem, p
     handleSelect,
     autoComplete,
     focus: () => inputRef.current?.focus(),
+    eventBus,
   };
 }

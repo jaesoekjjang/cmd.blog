@@ -31,7 +31,10 @@ export class CommandExecutor {
     if (shouldUseRawMode && result.type === 'raw') {
       const contentType = this.determineContentType(result, policy);
 
-      await terminalSession.setMode('raw');
+      await terminalSession.setMode('raw', {
+        content: result.content,
+        contentType,
+      });
       await terminalSession.handleRawOutput({
         content: result.content,
         contentType,

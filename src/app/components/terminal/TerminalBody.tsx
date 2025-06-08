@@ -30,6 +30,7 @@ export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging,
     shell,
     focus,
     terminalMode,
+    eventBus,
   } = useShell({
     fileSystem,
     commandRegistry,
@@ -39,6 +40,10 @@ export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging,
   useEffect(() => {
     focus();
   }, [focus]);
+
+  useEffect(() => {
+    paging.setEventBus(eventBus);
+  }, [paging, eventBus]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

@@ -3,6 +3,7 @@ import { OutputItem, OutputManger } from './types';
 
 export class BaseOutputManager implements OutputManger {
   private outputs: OutputItem[] = [];
+  private canonicalOutputs: OutputItem[] = [];
   private idCounter = 0;
   private eventBus: EventBus<TerminalEvents>;
 
@@ -15,7 +16,7 @@ export class BaseOutputManager implements OutputManger {
       id: this.idCounter++,
       ...output,
     };
-    
+
     this.outputs.push(outputWithId);
     this.eventBus.emit('output:changed', [...this.outputs]);
   }
@@ -30,11 +31,22 @@ export class BaseOutputManager implements OutputManger {
     return [...this.outputs];
   }
 
-  on(event: 'outputsChanged', listener: (outputs: OutputItem[]) => void): void {
-    this.eventBus.on('output:changed', listener);
+  preserveCanonicalOutputs(): void {
+    this.canonicalOutputs = [...this.outputs];
   }
 
-  off(event: 'outputsChanged', listener: (outputs: OutputItem[]) => void): void {
-    this.eventBus.off('output:changed', listener);
+  setRawOutput(output: Omit<OutputItem, 'id'>): void {
+    const outputWithId: OutputItem = {
+      id: this.idCounter++,
+      ...output,
+    };
+
+    this.outputs = [outputWithId];
+    this.eventBus.emit('output:changed', [...this.outputs]);
+  }
+
+  restoreCanonicalOutputs(): void {
+    this.outputs = [...this.canonicalOutputs];
+    this.eventBus.emit('output:changed', [...this.outputs]);
   }
 }

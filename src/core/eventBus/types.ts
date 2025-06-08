@@ -10,6 +10,9 @@ export interface TerminalEvents {
   };
   'output:changed': OutputItem[];
   'output:cleared': void;
+  'output:preserveCanonical': void;
+  'output:setRaw': { content: string; contentType: 'markdown' | 'text' };
+  'output:restoreCanonical': void;
   'paging:enabled': { content: string; contentType: string };
   'paging:disabled': void;
 }
