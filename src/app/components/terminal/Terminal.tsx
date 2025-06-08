@@ -49,7 +49,6 @@ export function Terminal({ fileSystem }: TerminalProps) {
     initialHeight: 720,
     minWidth: 400,
     minHeight: 300,
-    onResize: (_, height) => paging.updateViewport(height),
   });
 
   useEffect(() => {

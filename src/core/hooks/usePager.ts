@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DomPager } from '../pager/DomPager';
 import { ContentType, PagerState } from '../pager/types';
 
@@ -26,9 +26,19 @@ interface ExtendedPagerState extends PagerState {
 
 export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
   const [state, setState] = useState<PagerState | null>(null);
+  const lastViewportHeightRef = useRef<number>(0);
 
   const pagerRef = useRef<DomPager | null>(null);
   const contentRef = useRef<T>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pagerRef.current) {
+        pagerRef.current.dispose();
+        pagerRef.current = null;
+      }
+    };
+  }, []);
 
   const createPagerState = useCallback((pager: DomPager): ExtendedPagerState => {
     const { currentPosition, maxPosition } = pager.state;
@@ -46,6 +56,15 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
     const newState = createPagerState(pagerRef.current);
     setState(newState);
   }, [createPagerState]);
+
+  const disposePager = useCallback(() => {
+    if (pagerRef.current) {
+      pagerRef.current.dispose();
+      pagerRef.current = null;
+    }
+    setState(null);
+    lastViewportHeightRef.current = 0;
+  }, []);
 
   const nextPage = useCallback(() => {
     if (!pagerRef.current) return;
@@ -77,7 +96,8 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
 
   const updateViewport = useCallback(
     (height: number) => {
-      if (!pagerRef.current) return;
+      if (!pagerRef.current || lastViewportHeightRef.current === height) return;
+      lastViewportHeightRef.current = height;
       pagerRef.current.updateViewport(height);
       updatePagerState();
     },
@@ -85,9 +105,8 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
   );
 
   const exitPaging = useCallback(() => {
-    pagerRef.current = null;
-    setState(null);
-  }, []);
+    disposePager();
+  }, [disposePager]);
 
   const initializePaging = useCallback(
     (content: string, contentType: ContentType = ContentType.PLAIN_TEXT) => {
@@ -95,6 +114,10 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
       if (!container) {
         console.error('initializePaging: container is null');
         return;
+      }
+
+      if (pagerRef.current) {
+        pagerRef.current.dispose();
       }
 
       const rect = container.getBoundingClientRect();
@@ -110,6 +133,12 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
       });
 
       pagerRef.current = pager;
+      lastViewportHeightRef.current = currentViewport.height;
+
+      if (container) {
+        pager.setContentElement(container);
+      }
+
       updatePagerState();
     },
     [updatePagerState],

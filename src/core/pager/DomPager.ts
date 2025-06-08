@@ -1,3 +1,4 @@
+import debounce from 'debounce';
 import { Pager } from './Pager';
 import { ContentType, PagerOptions, PagerState } from './types';
 
@@ -10,6 +11,7 @@ export class DomPager implements Pager {
   private scrollRatio: number;
   private contentElement: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private debouncedCalculateMaxPosition: () => void;
 
   constructor(options: PagerOptions) {
     this._content = options.content;
@@ -17,6 +19,8 @@ export class DomPager implements Pager {
     this.viewportHeight = options.viewportHeight;
     this.scrollRatio = options.scrollRatio ?? 0.8;
     this.calculateMaxPosition();
+
+    this.debouncedCalculateMaxPosition = debounce(this.calculateMaxPosition.bind(this), 16);
   }
 
   get state(): PagerState {
@@ -36,18 +40,12 @@ export class DomPager implements Pager {
   }
 
   setContentElement(element: HTMLElement) {
+    this.cleanupResizeObserver();
+
     this.contentElement = element;
     this.calculateMaxPosition();
 
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-
-    this.resizeObserver = new ResizeObserver(() => {
-      this.calculateMaxPosition();
-    });
-
-    this.resizeObserver.observe(element);
+    this.setupResizeObserver();
 
     return this;
   }
@@ -120,6 +118,7 @@ export class DomPager implements Pager {
   private applyScrollPosition() {
     if (this.contentElement) {
       this.contentElement.scrollTop = this._currentPosition;
+      scrollToWithSpeed(this.contentElement, this._currentPosition, 180);
     }
   }
 
@@ -139,13 +138,49 @@ export class DomPager implements Pager {
     this.calculateMaxPosition();
   }
 
-  dispse() {
+  private setupResizeObserver() {
+    if (!this.contentElement) return;
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.debouncedCalculateMaxPosition();
+    });
+
+    this.resizeObserver.observe(this.contentElement);
+  }
+
+  private cleanupResizeObserver() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+  }
+
+  dispose() {
     this.contentElement = null;
     this._currentPosition = 0;
     this._maxPosition = 0;
     this._content = '';
     this.contentType = ContentType.PLAIN_TEXT;
-    this.resizeObserver?.disconnect();
-    this.resizeObserver = null;
+    this.cleanupResizeObserver();
   }
+}
+
+function scrollToWithSpeed(element: HTMLElement, targetTop: number, speed = 500) {
+  const startTop = element.scrollTop;
+  const distance = targetTop - startTop;
+  const startTime = performance.now();
+
+  function step(currentTime: number) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / speed, 1); // 0 ~ 1 사이 비율
+    const newTop = startTop + distance * progress;
+
+    element.scrollTop = newTop;
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
 }

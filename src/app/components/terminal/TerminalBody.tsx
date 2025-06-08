@@ -4,7 +4,7 @@ import { UsePagerReturn } from '@/core/hooks/usePager';
 import { ResizableState } from '@/core/hooks/useResizable';
 import { useShell } from '@/core/shell/useShell';
 import { TerminalSession } from '@/core/terminalSession/TerminalSession';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { TerminalAutoComplete } from './TerminalAutoComplete';
 import { TerminalInput } from './TerminalInput';
 import { TerminalOutput } from './TerminalOutput';
@@ -62,13 +62,13 @@ export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging,
     }
   }, [outputs, autoComplete, bodyRef, paging.isActive]);
 
+  const onLayoutReady = useCallback(() => {
+    paging.updateViewport(bodyRef.current?.clientHeight || 0);
+  }, [paging, bodyRef]);
+
   return (
     <div className="scrollbar relative flex-auto px-2 py-1" ref={bodyRef} onClick={focus}>
-      <TerminalOutput terminalMode={terminalMode} output={outputs}
-        onLayoutReady={() => {
-          paging.updateViewport(bodyRef.current?.clientHeight || 0);
-        }}
-      />
+      <TerminalOutput terminalMode={terminalMode} output={outputs} onLayoutReady={onLayoutReady} />
       <TerminalInput
         ref={inputRef}
         value={input}
