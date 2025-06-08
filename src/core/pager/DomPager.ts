@@ -145,7 +145,7 @@ export class DomPager implements Pager {
     this._maxPosition = 0;
     this._content = '';
     this.contentType = ContentType.PLAIN_TEXT;
-      this.resizeObserver?.disconnect();
-      this.resizeObserver = null;
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
   }
 }

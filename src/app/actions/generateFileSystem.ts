@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { unstable_cache } from 'next/cache';
 import { basename, extname, join } from 'path';
 
-const rootDirectory = join(process.cwd(), 'src/files');
+const rootDirectory = join(process.cwd(), 'src/virtualFs');
 
 async function buildFileSystem(): Promise<FileSystem> {
   const fileSystem: FileSystem = {
