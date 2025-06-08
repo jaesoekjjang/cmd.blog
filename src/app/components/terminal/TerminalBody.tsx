@@ -16,9 +16,10 @@ interface TerminalBodyProps {
   resizeState: ResizableState;
   paging: UsePagerReturn<HTMLDivElement>;
   bodyRef: React.RefObject<HTMLDivElement>;
+  headerHeight?: number;
 }
 
-export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging, bodyRef }: TerminalBodyProps) {
+export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging, bodyRef, headerHeight }: TerminalBodyProps) {
   const terminalSession = useRef(new TerminalSession());
 
   const {
@@ -67,7 +68,11 @@ export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging,
   }, [paging, bodyRef]);
 
   return (
-    <div className="scrollbar relative flex-auto px-2 py-1" ref={bodyRef} onClick={focus}>
+    <div 
+      className="scrollbar relative flex-auto px-2 py-1" 
+      ref={bodyRef} 
+      onClick={focus}
+    >
       <TerminalOutput terminalMode={terminalMode} output={outputs} onLayoutReady={onLayoutReady} />
       <TerminalInput
         ref={inputRef}

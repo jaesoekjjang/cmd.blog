@@ -27,13 +27,6 @@ export class TerminalSession {
     this.currentMode = TerminalMode.CANONICAL;
     this.outputs = [];
     this.eventListeners = {};
-
-    this.addOutput({ output: 'Welcome to Enhanced Web Terminal v2.0', style: { foreground: '#00ff00', bold: true } });
-    this.addOutput({
-      output: 'Now with Improved Pager! Type "help" for available commands',
-      style: { foreground: '#888888' },
-    });
-    this.addOutput({ output: '' });
   }
 
   setViewportDimensions(width: number, height: number): void {
