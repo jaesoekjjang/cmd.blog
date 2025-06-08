@@ -3,8 +3,7 @@ import { FileSystem } from '@/core/filesystem';
 import { UsePagerReturn } from '@/core/hooks/usePager';
 import { ResizableState } from '@/core/hooks/useResizable';
 import { useShell } from '@/core/shell/useShell';
-import { TerminalSession } from '@/core/terminalSession/TerminalSession';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { TerminalAutoComplete } from './TerminalAutoComplete';
 import { TerminalInput } from './TerminalInput';
 import { TerminalOutput } from './TerminalOutput';
@@ -19,9 +18,7 @@ interface TerminalBodyProps {
   headerHeight?: number;
 }
 
-export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging, bodyRef, headerHeight }: TerminalBodyProps) {
-  const terminalSession = useRef(new TerminalSession());
-
+export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging, bodyRef }: TerminalBodyProps) {
   const {
     input,
     outputs,
@@ -36,7 +33,6 @@ export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging,
   } = useShell({
     fileSystem,
     commandRegistry,
-    terminalSession: terminalSession.current,
     paging,
   });
 

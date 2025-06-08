@@ -1,24 +1,25 @@
 import { CommandRegistry } from '@/core/commands';
+import { EventBus, TerminalEvents } from '@/core/eventBus';
 import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
-import { OutputItem, OutputManager } from '@/core/output';
+import { OutputItem } from '@/core/output';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CompletionProvider } from '../completionProvider';
 import { UsePagerReturn } from '../hooks/usePager';
 import { InputLineEditor } from '../lineEditor/InputLineEditor';
-import { TerminalSession } from '../terminalSession/TerminalSession';
+import { BaseOutputManager } from '../output/OutputManager';
+import { TerminalMode, TerminalSession } from '../terminalSession/TerminalSession';
 import { Shell } from './Shell';
 import { AutoComplete } from './types';
 
-interface useLineEditorProps {
+interface useLineEditorProps<T extends HTMLElement> {
   commandRegistry: CommandRegistry;
   fileSystem: FileSystem;
-  terminalSession: TerminalSession;
-  paging: UsePagerReturn;
+  paging: UsePagerReturn<T>;
 }
 
-export function useShell({ commandRegistry, fileSystem, terminalSession, paging }: useLineEditorProps) {
-  const [terminalMode, setTerminalMode] = useState(terminalSession.getCurrentMode());
+export function useShell<T extends HTMLElement>({ commandRegistry, fileSystem, paging }: useLineEditorProps<T>) {
+  const [terminalMode, setTerminalMode] = useState<TerminalMode>(TerminalMode.CANONICAL);
   const [input, setInput] = useState('');
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
   const [autoComplete, setAutoComplete] = useState<AutoComplete>({
@@ -28,7 +29,9 @@ export function useShell({ commandRegistry, fileSystem, terminalSession, paging 
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [outputManager] = useState(() => new OutputManager());
+  const [eventBus] = useState(() => new EventBus<TerminalEvents>());
+  const [outputManager] = useState(() => new BaseOutputManager(eventBus));
+  const [terminalSession] = useState(() => new TerminalSession(eventBus));
 
   const [shell] = useState(() => {
     const commandHistoryManager = new CommandHistoryManager();
@@ -109,24 +112,24 @@ export function useShell({ commandRegistry, fileSystem, terminalSession, paging 
   );
 
   useEffect(() => {
-    const handleModeChange = ({ mode }: { mode: any }) => {
-      setTerminalMode(mode);
+    const handleModeChange = ({ mode }: { mode: string }) => {
+      setTerminalMode(mode as TerminalMode);
     };
 
     const handleOutputsChanged = (outputs: OutputItem[]) => {
       setOutputs(outputs);
     };
 
-    terminalSession.on('modeChanged', handleModeChange);
-    terminalSession.on('rawOutputRequested', handleRawOutputRequested);
-    outputManager.on('outputsChanged', handleOutputsChanged);
+    eventBus.on('terminal:modeChanged', handleModeChange);
+    eventBus.on('terminal:rawOutputRequested', handleRawOutputRequested);
+    eventBus.on('output:changed', handleOutputsChanged);
 
     return () => {
-      terminalSession.off('modeChanged', handleModeChange);
-      terminalSession.off('rawOutputRequested', handleRawOutputRequested);
-      outputManager.off('outputsChanged', handleOutputsChanged);
+      eventBus.off('terminal:modeChanged', handleModeChange);
+      eventBus.off('terminal:rawOutputRequested', handleRawOutputRequested);
+      eventBus.off('output:changed', handleOutputsChanged);
     };
-  }, [handleRawOutputRequested, terminalSession, outputManager]);
+  }, [handleRawOutputRequested, eventBus]);
 
   return {
     shell,

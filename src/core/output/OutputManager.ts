@@ -1,9 +1,14 @@
-import {  OutputItem, OutputManger } from './types';
+import { EventBus, TerminalEvents } from '@/core/eventBus';
+import { OutputItem, OutputManger } from './types';
 
 export class BaseOutputManager implements OutputManger {
   private outputs: OutputItem[] = [];
   private idCounter = 0;
-  private eventListeners: Record<string, Array<(...args: any[]) => void>> = {};
+  private eventBus: EventBus<TerminalEvents>;
+
+  constructor(eventBus: EventBus<TerminalEvents>) {
+    this.eventBus = eventBus;
+  }
 
   addOutput(output: Omit<OutputItem, 'id'>): void {
     const outputWithId: OutputItem = {
@@ -12,12 +17,13 @@ export class BaseOutputManager implements OutputManger {
     };
     
     this.outputs.push(outputWithId);
-    this.emit('outputsChanged', [...this.outputs]);
+    this.eventBus.emit('output:changed', [...this.outputs]);
   }
 
   clearOutputs(): void {
     this.outputs = [];
-    this.emit('outputsChanged', []);
+    this.eventBus.emit('output:changed', []);
+    this.eventBus.emit('output:cleared', undefined);
   }
 
   getOutputs(): OutputItem[] {
@@ -25,21 +31,10 @@ export class BaseOutputManager implements OutputManger {
   }
 
   on(event: 'outputsChanged', listener: (outputs: OutputItem[]) => void): void {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
-    }
-    this.eventListeners[event].push(listener);
+    this.eventBus.on('output:changed', listener);
   }
 
   off(event: 'outputsChanged', listener: (outputs: OutputItem[]) => void): void {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event] = this.eventListeners[event].filter(l => l !== listener);
-    }
-  }
-
-  private emit(event: string, ...args: any[]): void {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event].forEach(listener => listener(...args));
-    }
+    this.eventBus.off('output:changed', listener);
   }
 }

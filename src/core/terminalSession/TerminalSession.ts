@@ -1,67 +1,41 @@
-export type TerminalMode = (typeof TerminalMode)[keyof typeof TerminalMode];
+import { EventBus, TerminalEvents } from '@/core/eventBus';
 
 export const TerminalMode = {
   CANONICAL: 'canonical',
   RAW: 'raw',
 } as const;
 
+export type TerminalMode = (typeof TerminalMode)[keyof typeof TerminalMode];
+
 export class TerminalSession {
   private viewportWidth: number;
   private viewportHeight: number;
-  private currentMode: (typeof TerminalMode)[keyof typeof TerminalMode];
-  private eventListeners: Record<string, Array<(...args: any[]) => void>>;
+  private currentMode: TerminalMode;
+  private eventBus: EventBus<TerminalEvents>;
 
-  constructor() {
+  constructor(eventBus: EventBus<TerminalEvents>) {
     this.viewportWidth = 800;
     this.viewportHeight = 600;
     this.currentMode = TerminalMode.CANONICAL;
-    this.eventListeners = {};
+    this.eventBus = eventBus;
   }
 
   setViewportDimensions(width: number, height: number): void {
     this.viewportWidth = width;
     this.viewportHeight = height;
-    this.emit('viewportChanged', { width, height });
+    this.eventBus.emit('terminal:viewportChanged', { width, height });
   }
 
-  async setMode(
-    mode: (typeof TerminalMode)[keyof typeof TerminalMode],
-    data?: {
-      content: string;
-      title?: string;
-      contentType?: 'markdown' | 'text';
-      requiresPaging?: boolean;
-    },
-  ): Promise<void> {
+  async setMode(mode: TerminalMode): Promise<void> {
     if (this.currentMode !== mode) {
       const previousMode = this.currentMode;
       this.currentMode = mode;
-      this.emit('modeChanged', { mode, data, previousMode });
+      this.eventBus.emit('terminal:modeChanged', { mode, previousMode });
     }
   }
 
-  getCurrentMode(): (typeof TerminalMode)[keyof typeof TerminalMode] {
+  getCurrentMode(): TerminalMode {
     return this.currentMode;
-  }
-
-
-  off(event: string, listener: (...args: any[]) => void): void {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event] = this.eventListeners[event].filter(l => l !== listener);
-    }
-  }
-
-  on(event: string, listener: (...args: any[]) => void): void {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
-    }
-    this.eventListeners[event].push(listener);
-  }
-
-  emit(event: string, ...args: any[]): void {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event].forEach(listener => listener(...args));
-    }
   }
 
   async handleRawOutput(result: {
@@ -69,10 +43,10 @@ export class TerminalSession {
     contentType?: 'markdown' | 'text';
     requiresPaging?: boolean;
   }): Promise<void> {
-    this.emit('rawOutputRequested', {
+    this.eventBus.emit('terminal:rawOutputRequested', {
       content: result.content,
-      contentType: result.contentType || 'text',
-      requiresPaging: result.requiresPaging || false,
+      contentType: result.contentType ?? 'text',
+      requiresPaging: result.requiresPaging ?? false,
     });
   }
 
@@ -84,5 +58,9 @@ export class TerminalSession {
 
   isInRawMode(): boolean {
     return this.currentMode === TerminalMode.RAW;
+  }
+
+  getViewportDimensions(): { width: number; height: number } {
+    return { width: this.viewportWidth, height: this.viewportHeight };
   }
 }
