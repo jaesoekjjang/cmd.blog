@@ -1,4 +1,11 @@
 export { BaseCommand, type CommandResult } from './BaseCommand';
+export { CommandExecutor } from './CommandExecutor';
+export {
+  DefaultCommandPolicyProvider,
+  type CommandExecutionContext,
+  type CommandExecutionPolicy,
+  type PolicyProvider,
+} from './CommandPolicy';
 export { CommandRegistry } from './CommandRegistry';
 
 export { CatCommand } from './command/CatCommand';
