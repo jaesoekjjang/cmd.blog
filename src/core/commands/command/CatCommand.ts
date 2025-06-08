@@ -28,10 +28,9 @@ export class CatCommand extends BaseCommand {
     const content = node.rendered.content;
     const isMarkdown = this.isMarkdownFile(file) || node.rendered.kind === 'html';
 
-    // 마크다운 파일인 경우 렌더링
     if (isMarkdown) {
       const renderedContent = await renderMarkdown(content);
-      return this.createRawResult(content, 'markdown', true);
+      return this.createRawResult(renderedContent, 'markdown', true);
     }
 
     return this.createRawResult(content, 'text', true);

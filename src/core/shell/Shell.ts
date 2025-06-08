@@ -1,11 +1,11 @@
 import { getThemeTokenResolver } from '@/app/theme';
-import { CompletionProvider } from '@/core//completionProvider';
 import { HistoryManager } from '@/core//history';
 import { CommandRegistry, type CommandResult } from '@/core/commands';
 import { CommandExecutor } from '@/core/commands/CommandExecutor';
 import { DefaultCommandPolicyProvider } from '@/core/commands/CommandPolicy';
 import { FileSystem } from '@/core/filesystem';
-import { LineEditor, type LineEditorCallbacks, type TextStyle } from '@/core/lineEditor';
+import { type TextStyle } from '@/core/lineEditor';
+import { IOutputManager } from '@/core/output';
 import tinydate from 'tinydate';
 import { RenderedOutput } from '../filesystem/vFileSystem';
 import { TerminalSession } from '../terminalSession/TerminalSession';
@@ -20,15 +20,13 @@ const defaultShellOptions: ShellOptions = {
 
 export class Shell {
   private fileSystem: FileSystem;
-  private lineEditor: LineEditor;
+  private outputManager: IOutputManager;
   private currentDirectory: string;
   private fileHistory: string[];
 
   private commandRegistry: CommandRegistry;
   private commandHistoryManager: HistoryManager;
   private commandExecutor: CommandExecutor;
-
-  private completionProvider: CompletionProvider;
 
   private opts: ShellOptions;
   private promptState_: PromptState;
@@ -37,27 +35,24 @@ export class Shell {
   constructor({
     commandRegistry,
     fileSystem,
-    lineEditor,
+    outputManager,
     commandHistoryManager,
-    completionProvider,
     terminalSession,
     opts,
   }: {
     commandRegistry: CommandRegistry;
     fileSystem: FileSystem;
-    lineEditor: LineEditor;
+    outputManager: IOutputManager;
     commandHistoryManager: HistoryManager;
-    completionProvider: CompletionProvider;
     terminalSession: TerminalSession;
     opts?: Partial<ShellOptions>;
   }) {
     this.commandRegistry = commandRegistry;
     this.fileSystem = fileSystem;
-    this.lineEditor = lineEditor;
+    this.outputManager = outputManager;
     this.currentDirectory = '/';
     this.fileHistory = [];
     this.commandHistoryManager = commandHistoryManager;
-    this.completionProvider = completionProvider;
     this.terminalSession = terminalSession;
 
     const policyProvider = new DefaultCommandPolicyProvider();
@@ -73,8 +68,6 @@ export class Shell {
       prefix: this.opts.promptPrefix,
       date: tinydate(this.opts.dateFormat)(new Date()),
     };
-
-    this.setupLineEditorCallbacks(lineEditor);
 
     this.updateShellState();
   }
@@ -116,17 +109,17 @@ export class Shell {
   }
 
   clearOutput() {
-    this.lineEditor.clear();
+    this.outputManager.clearOutputs();
     this.updateShellState();
   }
 
   outputToTerminal(output: string, opts?: { newline?: boolean; style?: TextStyle; type?: RenderedOutput['kind'] }) {
     const { newline = false, style, type } = opts || {};
 
-    this.lineEditor.addOutput({ output, style, type });
+    this.outputManager.addOutput({ output, style, type });
 
     if (newline) {
-      this.lineEditor.addOutput({
+      this.outputManager.addOutput({
         output: '\n',
         type,
       });
@@ -177,6 +170,12 @@ export class Shell {
           type: 'html',
           newline: true,
         });
+      case 'raw':
+        return this.terminalSession.handleRawOutput({
+          content: output.content,
+          contentType: output.meta?.contentType,
+          requiresPaging: output.meta?.requiresPaging,
+        });
     }
   }
 
@@ -200,41 +199,16 @@ export class Shell {
     return this.commandHistoryManager.goToEnd();
   }
 
-  private setupLineEditorCallbacks(lineEditor: LineEditor) {
-    const callbacks: LineEditorCallbacks = {
-      onCommandExecute: command => {
-        if (!command) {
-          this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
-            style: { foreground: terminalPromptPrefix(), bold: true },
-            newline: true,
-          });
-          return;
-        }
+  executeCommandFromInput(command: string) {
+    if (!command) {
+      this.outputToTerminal(`${this.opts.promptPrefix}\t`, {
+        style: { foreground: terminalPromptPrefix(), bold: true },
+        newline: true,
+      });
+      return;
+    }
 
-        this.executeCommand(command);
-      },
-      onRequestPrevCommand: () => {
-        return this.getPreviousCommand();
-      },
-      onRequestNextCommand: () => {
-        return this.getNextCommand();
-      },
-      onRequestLastCommand: () => {
-        return this.goToLastCommand();
-      },
-      onRequestClear: () => {
-        this.clearOutput();
-      },
-      onRequestAutoComplete: () => {
-        return this.getAutocompleteSuggestions();
-      },
-    };
-
-    lineEditor.setCallbacks(callbacks);
-  }
-
-  getAutocompleteSuggestions() {
-    return this.completionProvider.complete(this.lineEditor, this);
+    this.executeCommand(command);
   }
 
   getTerminalSession() {

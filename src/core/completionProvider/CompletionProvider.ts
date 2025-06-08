@@ -1,27 +1,21 @@
 import { LineEditor } from '@/core/lineEditor';
-import { CommandType } from '../commands';
+import { CommandRegistry } from '../commands';
 import { DirectoryNode, FileSystem, FSNode } from '../filesystem';
+import { CursorContext } from '../lineEditor/types';
 import { Shell } from '../shell';
 
-interface CursorContext {
-  line: string;
-  cursor: number;
-  currentWord: string;
-  command: string;
-}
-
 export class CompletionProvider {
-  private readonly FILE_COMMANDS: CommandType[] = ['ls', 'cd', 'cat'];
+  private readonly FILE_COMMANDS: string[] = ['ls', 'cd', 'cat'];
 
-  complete(lineEditor: LineEditor, shell: Shell): string[] {
-    const context = this.extractCursorContext(lineEditor);
+  complete(lineEditor: LineEditor, shell: Shell, commandRegistry: CommandRegistry): string[] {
+    const context = lineEditor.getcursorContext();
 
     if (!context) {
       return [];
     }
 
     if (this.isInCommandPosition(context)) {
-      return this.completeCommand(context.currentWord, shell);
+      return this.completeCommand(context.currentWord, commandRegistry);
     }
 
     if (this.isFileCompletionRequired(context)) {
@@ -29,46 +23,6 @@ export class CompletionProvider {
     }
 
     return [];
-  }
-
-  private extractCursorContext(lineEditor: LineEditor): CursorContext | null {
-    const line = lineEditor.getInput();
-    const { end: cursor } = lineEditor.cursorPosition;
-
-    if (line[cursor] === ' ') {
-      return null;
-    }
-
-    const currentWord = this.extractCurrentWord(line, cursor);
-    const args = line.slice(0, cursor).trim().split(/\s+/);
-    const command = args[0] || '';
-
-    return {
-      line,
-      cursor,
-      currentWord,
-      command,
-    };
-  }
-
-  /**
-   * 현재 커서 위치의 단어
-   */
-  private extractCurrentWord(line: string, cursor: number): string {
-    const isAfterSpace = line[cursor - 1] === ' ';
-    const noMoreWordsAfterCursor = line.slice(cursor).search(/\S/) === -1;
-
-    if (isAfterSpace && noMoreWordsAfterCursor) {
-      return '';
-    }
-
-    const leftBoundary = line.slice(0, cursor).search(/\S+$/);
-    const rightSearch = line.slice(cursor).search(/\s|$/);
-
-    const start = leftBoundary >= 0 ? leftBoundary : cursor;
-    const end = rightSearch >= 0 ? cursor + rightSearch : line.length;
-
-    return line.slice(start, end);
   }
 
   /**
@@ -112,7 +66,7 @@ export class CompletionProvider {
     return files.filter(file => file.startsWith(prefix));
   }
 
-  private completeCommand(currentArg: string, shell: Shell): string[] {
-    return shell.getCommands().filter(command => command.startsWith(currentArg));
+  private completeCommand(currentArg: string, commandRegistry: CommandRegistry): string[] {
+    return commandRegistry.getNames().filter(command => command.startsWith(currentArg));
   }
 }

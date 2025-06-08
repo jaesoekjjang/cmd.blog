@@ -20,3 +20,10 @@ export interface OutputItem {
   style?: TextStyle;
   type?: RenderedOutput['kind'];
 }
+
+export interface CursorContext {
+  line: string;
+  cursor: number;
+  currentWord: string;
+  command: string;
+}

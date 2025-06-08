@@ -1,10 +1,8 @@
 import { getKeyName } from './getKeyName';
 import { LineEditor, LineEditorCallbacks } from './LineEditor';
-import { OutputOptions } from './types';
+import { CursorContext } from './types';
 
 export class InputLineEditor extends LineEditor {
-  private outputs: OutputOptions[] = [];
-
   private keyHandlers: Record<string, () => void | number> = {
     ArrowUp: this.handleArrowUp.bind(this),
     ArrowDown: this.handleArrowDown.bind(this),
@@ -32,16 +30,6 @@ export class InputLineEditor extends LineEditor {
 
   getSuggestions() {
     return this.suggestions;
-  }
-
-  clear() {
-    this.outputs = [];
-    this.callbacks.onOutputsChange?.(this.outputs);
-  }
-
-  addOutput(options: OutputOptions) {
-    this.outputs.push(options);
-    this.callbacks.onOutputsChange?.([...this.outputs]);
   }
 
   setInput(input: string, updateCursor = true) {
@@ -149,7 +137,7 @@ export class InputLineEditor extends LineEditor {
     }
 
     if (!this.isAutoCompleteActive) {
-      const suggestions = this.callbacks.onRequestAutoComplete?.() || [];
+      const suggestions = this.callbacks.onRequestAutoComplete?.(this) || [];
       this.suggestions = suggestions;
       this.isAutoCompleteActive = true;
       this.selectedSuggestionIndex = 0;
@@ -180,5 +168,45 @@ export class InputLineEditor extends LineEditor {
       this.setInput(newInput);
       this.callbacks.onSuggestionsChange?.(this.suggestions, this.selectedSuggestionIndex);
     }
+  }
+
+  getcursorContext(): CursorContext | null {
+    const line = this.getInput();
+    const { end: cursor } = this.cursorPosition;
+
+    if (line[cursor] === ' ') {
+      return null;
+    }
+
+    const currentWord = this.extractCurrentWord(line, cursor);
+    const args = line.slice(0, cursor).trim().split(/\s+/);
+    const command = args[0] || '';
+
+    return {
+      line,
+      cursor,
+      currentWord,
+      command,
+    };
+  }
+
+  /**
+   * 현재 커서 위치의 단어
+   */
+  private extractCurrentWord(line: string, cursor: number): string {
+    const isAfterSpace = line[cursor - 1] === ' ';
+    const noMoreWordsAfterCursor = line.slice(cursor).search(/\S/) === -1;
+
+    if (isAfterSpace && noMoreWordsAfterCursor) {
+      return '';
+    }
+
+    const leftBoundary = line.slice(0, cursor).search(/\S+$/);
+    const rightSearch = line.slice(cursor).search(/\s|$/);
+
+    const start = leftBoundary >= 0 ? leftBoundary : cursor;
+    const end = rightSearch >= 0 ? cursor + rightSearch : line.length;
+
+    return line.slice(start, end);
   }
 }

@@ -1,4 +1,4 @@
-import { OutputOptions } from './types';
+import { CursorContext } from './types';
 
 export abstract class LineEditor {
   protected input: string = '';
@@ -12,13 +12,13 @@ export abstract class LineEditor {
 
   protected callbacks: LineEditorCallbacks;
 
-  abstract clear(): void;
   abstract getInput(): string;
   abstract setInput(input: string): void;
-  abstract addOutput(options: OutputOptions): void;
   abstract getSuggestions(): string[];
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   abstract handleKeyDown(...args: any[]): void;
+
+  abstract getcursorContext(): CursorContext | null;
 
   constructor(callbacks: LineEditorCallbacks) {
     this.callbacks = callbacks || {};
@@ -96,12 +96,11 @@ export abstract class LineEditor {
 
 export interface LineEditorCallbacks {
   onInputChange?: (input: string) => void;
-  onOutputsChange?: (outputs: OutputOptions[]) => void;
   onSuggestionsChange?: (suggestions: string[], index: number) => void;
   onCommandExecute?: (command: string) => void;
   onRequestPrevCommand?: () => void;
   onRequestNextCommand?: () => void;
   onRequestLastCommand?: () => void;
   onRequestClear?: () => void;
-  onRequestAutoComplete?: () => void;
+  onRequestAutoComplete?: (lineEditor: LineEditor) => void;
 }

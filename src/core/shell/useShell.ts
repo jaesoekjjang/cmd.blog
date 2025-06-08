@@ -1,7 +1,7 @@
 import { CommandRegistry } from '@/core/commands';
 import { FileSystem } from '@/core/filesystem';
 import { CommandHistoryManager } from '@/core/history';
-import { OutputItem } from '@/core/lineEditor';
+import { OutputItem, OutputManager } from '@/core/output';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CompletionProvider } from '../completionProvider';
 import { UsePagerReturn } from '../hooks/usePager';
@@ -27,41 +27,34 @@ export function useShell({ commandRegistry, fileSystem, terminalSession, paging 
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const outputIdRef = useRef(0);
 
-  const handleOutputChange = useCallback(
-    (newOutputs: OutputItem[]) => {
-      const updatedOutputs = newOutputs.map(output => ({
-        id: outputIdRef.current++,
-        ...output,
-      }));
-      setOutputs(updatedOutputs);
-    },
-    [setOutputs],
-  );
-
-  const [lineEditor] = useState(
-    () =>
-      new InputLineEditor({
-        onInputChange: setInput,
-        onOutputsChange: handleOutputChange,
-        onSuggestionsChange: (suggestions, index) => setAutoComplete({ suggestions, index }),
-      }),
-  );
+  const [outputManager] = useState(() => new OutputManager());
 
   const [shell] = useState(() => {
     const commandHistoryManager = new CommandHistoryManager();
-    const completionProvider = new CompletionProvider();
     const shell = new Shell({
       commandRegistry,
       fileSystem,
-      lineEditor,
+      outputManager,
       commandHistoryManager,
-      completionProvider,
       terminalSession,
     });
 
     return shell;
+  });
+
+  const [lineEditor] = useState(() => {
+    const completionProvider = new CompletionProvider();
+    return new InputLineEditor({
+      onInputChange: setInput,
+      onSuggestionsChange: (suggestions, index) => setAutoComplete({ suggestions, index }),
+      onCommandExecute: command => shell.executeCommandFromInput(command),
+      onRequestPrevCommand: () => shell.getPreviousCommand(),
+      onRequestNextCommand: () => shell.getNextCommand(),
+      onRequestLastCommand: () => shell.goToLastCommand(),
+      onRequestClear: () => shell.clearOutput(),
+      onRequestAutoComplete: lineEditor => completionProvider.complete(lineEditor, shell, commandRegistry),
+    });
   });
 
   // lineEditor->input 커서 위치 동기화
@@ -105,21 +98,14 @@ export function useShell({ commandRegistry, fileSystem, terminalSession, paging 
     ({ content, contentType, requiresPaging }: { content: string; contentType: string; requiresPaging: boolean }) => {
       if (requiresPaging) {
         paging.enable(content, contentType);
-        handleOutputChange([
-          {
-            id: outputIdRef.current++,
-            output: content,
-            type: contentType === 'markdown' ? 'html' : 'text',
-          },
-        ]);
       } else {
-        terminalSession.addOutput({
+        outputManager.addOutput({
           output: content,
           type: contentType === 'markdown' ? 'html' : 'text',
         });
       }
     },
-    [paging, terminalSession],
+    [paging, outputManager],
   );
 
   useEffect(() => {
@@ -127,16 +113,20 @@ export function useShell({ commandRegistry, fileSystem, terminalSession, paging 
       setTerminalMode(mode);
     };
 
+    const handleOutputsChanged = (outputs: OutputItem[]) => {
+      setOutputs(outputs);
+    };
+
     terminalSession.on('modeChanged', handleModeChange);
     terminalSession.on('rawOutputRequested', handleRawOutputRequested);
-    terminalSession.on('outputsChanged', handleOutputChange);
+    outputManager.on('outputsChanged', handleOutputsChanged);
 
     return () => {
       terminalSession.off('modeChanged', handleModeChange);
       terminalSession.off('rawOutputRequested', handleRawOutputRequested);
-      terminalSession.off('outputsChanged', handleOutputChange);
+      outputManager.off('outputsChanged', handleOutputsChanged);
     };
-  }, [handleOutputChange, handleRawOutputRequested, terminalSession]);
+  }, [handleRawOutputRequested, terminalSession, outputManager]);
 
   return {
     shell,
