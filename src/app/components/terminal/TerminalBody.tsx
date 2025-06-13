@@ -69,21 +69,21 @@ export function TerminalBody({ fileSystem, commandRegistry, resizeState, paging,
   }, [paging, bodyRef]);
 
   return (
-    <div 
-      className="scrollbar relative flex-auto px-2 py-1" 
-      ref={bodyRef} 
-      onClick={focus}
-    >
+    <div className="scrollbar relative flex-auto px-2 py-1" ref={bodyRef} onClick={focus}>
       <TerminalOutput terminalMode={terminalMode} output={outputs} onLayoutReady={onLayoutReady} />
-      <TerminalInput
-        ref={inputRef}
-        value={input}
-        onChange={handleTextInput}
-        onKeyDown={handleKeyDown}
-        onSelect={handleSelect}
-        prompt={shell.promptState}
-      />
-      <TerminalAutoComplete autoComplete={autoComplete} />
+      {paging.isActive || (
+        <>
+          <TerminalInput
+            ref={inputRef}
+            value={input}
+            onChange={handleTextInput}
+            onKeyDown={handleKeyDown}
+            onSelect={handleSelect}
+            prompt={shell.promptState}
+          />
+          <TerminalAutoComplete autoComplete={autoComplete} />
+        </>
+      )}
       <TerminalResizeOverlay state={resizeState} />
     </div>
   );

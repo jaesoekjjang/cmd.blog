@@ -141,6 +141,7 @@ export function usePager<T extends HTMLElement>(): UsePagerReturn<T> {
 
       if (container) {
         pager.setContentElement(container);
+        container.scrollTop = 0;
       }
 
       updatePagerState();
